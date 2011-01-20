@@ -1,0 +1,4 @@
+PURPOSE of bugzilla-bmo-4-0-test-suite
+Description: This test is for testing Mozilla Bugzilla version 4.0 (BMO). It first installs the required rpm dependencies via yum, then
+executes all of the test files in t/
+Author: Dave Lawrence <dkl@redhat.com> Dave Lawrence <dkl@mozilla.com>

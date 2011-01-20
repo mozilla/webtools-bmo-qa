@@ -64,5 +64,5 @@ $sel->title_is("Parameters Updated");
 
 $sel->click_ok("link=Home");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bugzilla Main Page");
+$sel->title_is($config->{bugzilla_title} . " Main Page");
 logout($sel);

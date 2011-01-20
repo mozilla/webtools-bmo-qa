@@ -141,7 +141,7 @@ sub log_in {
     $sel->type_ok("Bugzilla_password_top", $config->{"${user}_user_passwd"}, "Enter $user password");
     $sel->click_ok("log_in_top", undef, "Submit credentials");
     $sel->wait_for_page_to_load(WAIT_TIME);
-    $sel->title_is("Bugzilla Main Page", "User is logged in");
+    $sel->title_is($config->{bugzilla_title} . " Main Page", "User is logged in");
 }
 
 # Log out. Will fail if you are not logged in.
