@@ -9,7 +9,7 @@ my $config;
 
 BEGIN {
     print "reading the config file...\n";
-    my $conf_file = "selenium_test.conf";
+    my $conf_file = "t/config/selenium_test.conf";
     $config = do "$conf_file"
         or die "can't read configuration '$conf_file': $!$@";
 
@@ -29,6 +29,7 @@ use Bugzilla::Component;
 use Bugzilla::Group;
 use Bugzilla::Version;
 use Bugzilla::Constants;
+use Bugzilla::Keyword;
 use Bugzilla::Config qw(:admin);
 
 
@@ -65,6 +66,11 @@ write_params() if $params_modified;
 # First of all, remove the default .* regexp for the editbugs group.
 my $group = new Bugzilla::Group({ name => 'editbugs' });
 $group->set_user_regexp('');
+$group->update();
+
+# Set all users to be able to confirm
+$group = new Bugzilla::Group({ name => 'canconfirm' });
+$group->set_user_regexp('.*');
 $group->update();
 
 my @usernames = (
@@ -541,6 +547,23 @@ foreach my $alias (qw(public_bug private_bug)) {
             isprivate => $is_private,
         });
     }
+}
+
+###################
+# Create Keywords #
+###################
+
+my @keywords = (
+    { name => 'test-keyword-1',
+      description => 'Created for Bugzilla QA Tests, Keyword 1' },
+    { name => 'test-keyword-2',
+      description => 'Created for Bugzilla QA Tests, Keyword 2' },
+);
+
+print "creating keywords...\n";
+foreach my $kw (@keywords) {
+    next if new Bugzilla::Keyword({ name => $kw->{name} });
+    Bugzilla::Keyword->create($kw);
 }
 
 print "installation and configuration complete!\n";
