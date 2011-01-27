@@ -119,7 +119,7 @@ rlJournalStart
         rlRun "sed -i 's|FIREFOX_PATH|$FIREFOX_PATH|g' t/config/selenium_test.conf" 0 "Updating Selenium config file with Firefox path"
     rlPhaseEnd
 
-    rlPhaseStartTes
+    rlPhaseStartTest
         # Set the testoutputlog to the current beaker log dir
         TESTOUTPUTFILE="$BEAKERLIB_DIR/test_results.log"
 
