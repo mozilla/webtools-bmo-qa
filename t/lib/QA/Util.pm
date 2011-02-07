@@ -34,7 +34,7 @@ use base qw(Exporter);
 
 # How long we wait for pages to load.
 use constant WAIT_TIME => 60000;
-use constant CONF_FILE =>  "../config/selenium_test.conf";
+use constant CONF_FILE =>  "t/config/selenium_test.conf";
 use constant CHROME_MODE => 1;
 
 #####################
@@ -141,7 +141,7 @@ sub log_in {
     $sel->type_ok("Bugzilla_password_top", $config->{"${user}_user_passwd"}, "Enter $user password");
     $sel->click_ok("log_in_top", undef, "Submit credentials");
     $sel->wait_for_page_to_load(WAIT_TIME);
-    $sel->title_is($config->{bugzilla_title} . " Main Page", "User is logged in");
+    $sel->title_is("Bugzilla Main Page", "User is logged in");
 }
 
 # Log out. Will fail if you are not logged in.
@@ -159,6 +159,9 @@ sub file_bug_in_product {
 
     $classification ||= "Unclassified";
     $sel->click_ok("link=New", undef, "Go create a new bug");
+    $sel->wait_for_page_to_load(WAIT_TIME);
+    # Bugzilla@Mozilla loads a interim product selection page
+    $sel->click_ok("link=Other Products", undef, "Go create a new bug (Other Products)");
     $sel->wait_for_page_to_load(WAIT_TIME);
     my $title = $sel->get_title();
     if ($title eq "Select Classification") {

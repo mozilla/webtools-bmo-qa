@@ -341,7 +341,7 @@ $sel->is_text_present_ok("Status CONFIRMED RESOLVED");
 
 # Last step: move bugs to another DB, if the extension is enabled.
 
-if ($config->{test_extensions}) {
+if ($config->{test_extensions} && $config->{test_bug_move}) {
     set_parameters($sel, { "Bug Moving" => {"move-to-url"     => {type => "text", value => 'http://www.foo.com/'},
                                             "move-to-address" => {type => "text", value => 'import@foo.com'},
                                             "movers"          => {type => "text", value => $config->{admin_user_login}}

@@ -52,7 +52,7 @@ foreach my $alias (qw(public_bug private_bug)) {
 # Attachment Tests #
 ####################
 
-my $content_file = '../config/generate_test_data.pl';
+my $content_file = $config->{test_attachment};
 open(my $fh, '<', $content_file) or die "$content_file: $!";
 my $content;
 { local $/; $content = <$fh>; }

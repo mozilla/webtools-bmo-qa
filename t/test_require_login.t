@@ -17,13 +17,13 @@ logout($sel);
 # We try to access each page. None of the ones listed below should
 # let you view it without being logged in.
 
-my @pages = qw(admin attachment buglist chart colchange describecomponents
+my @pages = qw(admin buglist chart colchange describecomponents
                describekeywords duplicates editclassifications editcomponents
                editfields editflagtypes editgroups editkeywords editmilestones
                editparams editproducts editsettings editusers editvalues
                editversions editwhines editworkflow enter_bug long_list page
                post_bug process_bug query quips report reports request
-               sanitycheck search_plugin show_activity show_bug showattachment
+               sanitycheck search_plugin show_activity show_bug 
                showdependencygraph showdependencytree sidebar summarize_time
                userprefs votes xml);
 
