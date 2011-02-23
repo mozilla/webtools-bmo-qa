@@ -42,7 +42,6 @@ build: $(BUILT_FILES)
 clean:
 	rm -f *~ $(BUILT_FILES) bugzilla.tar.gz
 	rm -rf bugzilla/
-	rm -rf qa/
 
 bugzilla:
 	bzr co $(BZR_BUGZILLA_PATH) bugzilla
