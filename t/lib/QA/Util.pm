@@ -160,15 +160,17 @@ sub file_bug_in_product {
     $classification ||= "Unclassified";
     $sel->click_ok("link=New", undef, "Go create a new bug");
     $sel->wait_for_page_to_load(WAIT_TIME);
-    # Bugzilla@Mozilla loads a interim product selection page
-    #$sel->click_ok("link=Other Products", undef, "Go create a new bug (Other Products)");
-    #$sel->wait_for_page_to_load(WAIT_TIME);
     my $title = $sel->get_title();
     if ($title eq "Select Classification") {
         ok(1, "More than one enterable classification available. Display them in a list");
         $sel->click_ok("link=$classification", undef, "Choose $classification");
         $sel->wait_for_page_to_load(WAIT_TIME);
         $title = $sel->get_title();
+    }
+    if ($sel->is_text_present("Other Mozilla products which aren't listed here")) {
+        # BMO loads a interim product selection page
+        $sel->click_ok("link=Other Products", undef, "Go create a new bug (Other Products)");
+        $sel->wait_for_page_to_load(WAIT_TIME);
     }
     if ($title eq "Enter Bug") {
         ok(1, "Display the list of enterable products");
