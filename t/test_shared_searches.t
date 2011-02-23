@@ -159,16 +159,17 @@ logout($sel);
 # Make sure that the 'helpwanted' query is not shared with the QA_Selenium_TEST
 # user as he doesn't belong to the 'canconfirm' group.
 
-log_in($sel, $config, 'QA_Selenium_TEST');
-ok(!$sel->is_text_present("helpwanted"), "The 'helpwanted' query is not displayed in the footer");
-$sel->click_ok("link=Preferences");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("User Preferences");
-$sel->click_ok("link=Saved Searches");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("User Preferences");
-ok(!$sel->is_text_present("helpwanted"), "The 'helpwanted' query is not shared with this user");
-logout($sel);
+# disabled for BMO testing as the canconfirm regex is .*
+#log_in($sel, $config, 'QA_Selenium_TEST');
+#ok(!$sel->is_text_present("helpwanted"), "The 'helpwanted' query is not displayed in the footer");
+#$sel->click_ok("link=Preferences");
+#$sel->wait_for_page_to_load_ok(WAIT_TIME);
+#$sel->title_is("User Preferences");
+#$sel->click_ok("link=Saved Searches");
+#$sel->wait_for_page_to_load_ok(WAIT_TIME);
+#$sel->title_is("User Preferences");
+#ok(!$sel->is_text_present("helpwanted"), "The 'helpwanted' query is not shared with this user");
+#logout($sel);
 
 # Now remove the 'helpwanted' saved search.
 
