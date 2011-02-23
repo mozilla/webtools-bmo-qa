@@ -127,7 +127,8 @@ sub bz_get_products {
 sub _string_array { map { random_string() } (1..$_[0]) }
 
 sub bz_create_test_bugs {
-    my ($self, $config, $second_private) = @_;
+    my ($self, $second_private) = @_;
+    my $config = $self->bz_config;
 
     my @whiteboard_strings = _string_array(3);
     my @summary_strings = _string_array(3);
@@ -144,6 +145,9 @@ sub bz_create_test_bugs {
         $private_bug->{component} = 'QA-Selenium-TEST';
         $private_bug->{target_milestone} = 'QAMilestone';
         $private_bug->{version} = 'QAVersion';
+        # Although we don't directly use this, this helps some tests that
+        # depend on the values in $private_bug.
+        $private_bug->{creator} = $config->{PRIVATE_BUG_USER . '_user_login'};
     }
 
     my @create_bugs = (
@@ -179,6 +183,7 @@ sub bz_run_tests {
 
     # Optional params
     my $post_success = $params{post_success};
+    my $pre_call = $params{pre_call};
 
     my $former_user = '';
     foreach my $t (@$tests) {
@@ -190,6 +195,8 @@ sub bz_run_tests {
             $self->bz_log_in($user) if $user;
             $former_user = $user;
         }
+
+        $pre_call->($t, $self) if $pre_call;
 
         if ($t->{error}) {
             $self->bz_call_fail($method, $t->{args}, $t->{error}, $t->{test});
@@ -203,6 +210,55 @@ sub bz_run_tests {
     }
 
     $self->bz_call_success('User.logout') if $former_user;
+}
+
+sub bz_test_bug {
+    my ($self, $fields, $bug, $expect, $t, $creation_time) = @_;
+
+    foreach my $field (sort @$fields) {
+        # "description" is used by Bug.create but comments are not returned
+        # by Bug.get or Bug.search.
+        next if $field eq 'description';
+
+        my @include = @{ $t->{args}->{include_fields} || [] };
+        my @exclude = @{ $t->{args}->{exclude_fields} || [] };
+        if ( (@include and !grep($_ eq $field, @include))
+             or (@exclude and grep($_ eq $field, @exclude)) )
+        {
+            ok(!exists $bug->{$field}, "$field is not included")
+              or diag Dumper($bug);
+            next;
+        }
+
+        if ($field =~ /^is_/) {
+            ok(defined $bug->{$field}, $self->TYPE . ": $field is not null");
+            is($bug->{$field} ? 1 : 0, $expect->{$field} ? 1 : 0,
+               $self->TYPE . ": $field has the right boolean value");
+        }
+        elsif ($field eq 'cc') {
+            foreach my $cc_item (@{ $expect->{cc} || [] }) {
+                ok(grep($_ eq $cc_item, @{ $bug->{cc} }),
+                   $self->TYPE . ": $field contains $cc_item");
+            }
+        }
+        elsif ($field eq 'creation_time' or $field eq 'last_change_time') {
+            my $creation_day;
+            # XML-RPC and JSON-RPC have different date formats.
+            if ($self->isa('QA::RPC::XMLRPC')) {
+                $creation_day = $creation_time->ymd('');
+            }
+            else {
+                $creation_day = $creation_time->ymd;
+            }
+
+            like($bug->{$field}, qr/^\Q${creation_day}\ET\d\d:\d\d:\d\d/,
+                 $self->TYPE . ": $field has the right format");
+        }
+        else {
+            is_deeply($bug->{$field}, $expect->{$field},
+                      $self->TYPE . ": $field value is correct");
+        }
+    }
 }
 
 1;

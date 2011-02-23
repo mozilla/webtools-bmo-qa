@@ -8,13 +8,13 @@ use lib qw(lib);
 use QA::Util;
 use QA::Tests qw(PRIVATE_BUG_USER);
 use DateTime;
+use List::MoreUtils qw(uniq);
 use Test::More;
 
 my ($config, @clients) = get_rpc_clients();
-plan tests => $config->{test_extensions} ? 329 : 320;
+plan tests => $config->{test_extensions} ? 515 : 506;
 
-my ($public_bug, $private_bug) = $clients[0]->bz_create_test_bugs(
-    $config, 'private');
+my ($public_bug, $private_bug) = $clients[0]->bz_create_test_bugs('private');
 
 my @tests;
 foreach my $field (keys %$public_bug) {
@@ -113,6 +113,19 @@ push(@tests, (
       test => 'Limit 1 Offset 1',
       bugs => 1, exactly => 1,
     },
+
+    # include_fields ane exclude_fields
+    { args => { id => $public_bug->{id},
+                include_fields => ['id', 'alias', 'summary', 'groups'] },
+      test => 'include_fields',
+    },
+    { args => { id => $public_bug->{id},
+                exclude_fields => ['assigned_to', 'cf_qa_status'] },
+      test => 'exclude_fields' },
+    { args => { id => $public_bug->{id},
+                include_fields => ['id', 'alias', 'summary', 'groups'],
+                exclude_fields => ['summary'] },
+      test => 'exclude_fields overrides include_fields' },
 ));
 
 push(@tests,
@@ -134,6 +147,25 @@ sub post_success {
             ok(!grep($_->{alias} eq $private_bug->{alias}, @$bugs),
                'Result does not contain the private bug');
         }
+
+        my @include = @{ $t->{args}->{include_fields} || [] };
+        my @exclude = @{ $t->{args}->{exclude_fields} || [] };
+        if (@include or @exclude) {
+            my @check_fields = uniq (keys %$public_bug, @include);
+            foreach my $field (sort @check_fields) {
+                next if $field eq 'description';
+                if ((@include and !grep { $_ eq $field } @include )
+                    or (@exclude and grep { $_ eq $field } @exclude))
+                {
+                    ok(!exists $bugs->[0]->{$field}, "$field is not included")
+                      or diag Dumper($bugs);
+                }
+                else {
+                    ok(exists $bugs->[0]->{$field}, "$field is included");
+                }
+            }
+        }
+
     }
     else {
         is(scalar @$bugs, 0, 'No bugs returned');
