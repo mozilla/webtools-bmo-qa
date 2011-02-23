@@ -32,7 +32,8 @@
 . /usr/share/beakerlib/beakerlib.sh
 
 PACKAGE="bugzilla"
-BZ_HOME_DIR="/var/www/html/bugzilla"
+WEB_ROOT="/var/www/html"
+BZ_HOME_DIR="$WEB_ROOT/bugzilla"
 LOG=""
 RESULT="PASS"
 TESTOUTPUTFILE=""
@@ -82,8 +83,8 @@ rlJournalStart
         rlRun "yum -y remove firefox.i386" 0,1 "Removing i386 Firefox if installed"
  
         # Setup the Bugzilla web root directory
-        rlRun $LOG "rm -rf /var/www/html/bugzilla" 0 "Deleting old Bugzilla installation and installing test"
-        rlRun $LOG "mv bugzilla $BZ_HOME_DIR" 0 "Moving Bugzilla directory to webroot"
+        rlRun $LOG "rm -rf $BZ_HOME_DIR" 0 "Deleting old Bugzilla installation and installing test"
+        rlRun $LOG "tar cSpvf - ./bugzilla | (cd $WEB_ROOT; tar xSpf -)" 0 "Duplicating Bugzilla directory to webroot"
         rlRun $LOG "cd $BZ_HOME_DIR" 0 "Changing to Bugzilla directory"
 
         # Setup up Bugzilla configuration files
