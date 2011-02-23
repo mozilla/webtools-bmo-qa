@@ -106,20 +106,10 @@ foreach my $rpc (@clients) {
         $field_ids{$field} = $field_data->{id};
 
         if (grep($_ eq $field, MANDATORY_FIELDS)) {
-<<<<<<< TREE
-            ok(defined $field_data->{is_mandatory} && $field_data->{is_mandatory},
-               "$field is mandatory");
-=======
             ok($field_data->{is_mandatory}, "$field is mandatory");
->>>>>>> MERGE-SOURCE
         }
         else {
-<<<<<<< TREE
-            ok(defined $field_data->{is_mandatory} && !$field_data->{is_mandatory},
-               "$field is not mandatory");
-=======
             ok(!$field_data->{is_mandatory}, "$field is not mandatory");
->>>>>>> MERGE-SOURCE
         }
     }
 
