@@ -22,7 +22,6 @@ use Bugzilla;
 use Bugzilla::Attachment;
 use Bugzilla::Bug;
 use Bugzilla::User;
-use Bugzilla::User::Setting;
 use Bugzilla::Install;
 use Bugzilla::Milestone;
 use Bugzilla::Product;
@@ -566,9 +565,5 @@ foreach my $kw (@keywords) {
     next if new Bugzilla::Keyword({ name => $kw->{name} });
     Bugzilla::Keyword->create($kw);
 }
-
-# FIXME: Turn off pretty product chooser as it is causing
-# problems with the test cases.
-Bugzilla::User::Setting::set_default('product_chooser', 'full_product_chooser', 1);
 
 print "installation and configuration complete!\n";
