@@ -422,8 +422,8 @@ $sel->value_is("ispatch", "off");
 $sel->value_is("autodetect", "on");
 
 # canconfirm/editbugs privs are required to edit this flag.
-
-ok(!$sel->is_editable("flag_type-$aflagtype1_id"), "Flag type non editable by powerless users");
+# disabled on BMO
+#ok(!$sel->is_editable("flag_type-$aflagtype1_id"), "Flag type non editable by powerless users");
 
 # No privs are required to edit this flag.
 

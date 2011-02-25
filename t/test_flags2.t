@@ -308,7 +308,9 @@ $sel->click_ok("link=bug $bug2_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_like(qr/^Bug $bug2_id /);
 ok(!$sel->is_element_present("flag-$flag2_id"), "Flag $flag2_id deleted");
-ok(!$sel->is_editable("flag_type-$flagtype1_id"), "Flag type 'selenium' not editable by powerless users");
+# canconfirm/editbugs privs are required to edit this flag.
+# disabled for BMO
+#ok(!$sel->is_editable("flag_type-$flagtype1_id"), "Flag type 'selenium' not editable by powerless users");
 ok(!$sel->is_element_present("flag_type-$flagtype2_id"), "Flag type not available in c1");
 logout($sel);
 
