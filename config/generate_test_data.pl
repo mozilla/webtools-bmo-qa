@@ -31,6 +31,8 @@ use Bugzilla::Version;
 use Bugzilla::Constants;
 use Bugzilla::Keyword;
 use Bugzilla::Config qw(:admin);
+use Bugzilla::Field;
+use Bugzilla::Field::Choice;
 
 my $dbh = Bugzilla->dbh;
 
@@ -567,3 +569,16 @@ foreach my $kw (@keywords) {
 }
 
 print "installation and configuration complete!\n";
+
+#########################
+# Update BMO Priorities #
+#########################
+
+my $field = Bugzilla::Field->check('priority');
+Bugzilla::Field::Choice->type($field)->create({ value => '--' });
+Bugzilla::Field::Choice->type($field)->create({ value => 'P1' });
+Bugzilla::Field::Choice->type($field)->create({ value => 'P2' });
+Bugzilla::Field::Choice->type($field)->create({ value => 'P3' });
+Bugzilla::Field::Choice->type($field)->create({ value => 'P4' });
+Bugzilla::Field::Choice->type($field)->create({ value => 'P5' });
+
