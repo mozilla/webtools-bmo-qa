@@ -532,7 +532,6 @@ if (Bugzilla::Bug->new('private_bug')->{error}) {
 
 print "creating attachments...\n";
 # We use the contents of this script as the attachment.
-#open(my $attachment_fh, '<', __FILE__) or die __FILE__ . ": $!";
 open(my $attachment_fh, "< t/config/generate_test_data.pl") or die "t/config/generate_test_data.pl: $!";
 my $attachment_contents;
 { local $/; $attachment_contents = <$attachment_fh>; }
