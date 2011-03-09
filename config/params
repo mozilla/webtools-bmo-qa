@@ -17,7 +17,7 @@
            'allowemailchange' => 1,
            'allowuserdeletion' => 0,
            'announcehtml' => '',
-           'attachment_base' => 'https://bug%bugid%.bugzilla.mozilla.org/',
+           'attachment_base' => 'http://127.0.0.1/bugzilla/',
            'auth_env_email' => '',
            'auth_env_id' => '',
            'auth_env_realname' => '',
