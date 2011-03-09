@@ -147,6 +147,25 @@ $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_like(qr/Bug \d+ Submitted/, "Bug created");
 my $presentation_bug_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
+_check_component('mozilla.org', 'Discussion Forums');
+_check_group('infra');
+
+#mozlist
+
+$sel->open_ok("/$config->{bugzilla_installation}/enter_bug.cgi?product=mozilla.org&format=mozlist");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Mozilla Discussion Forum / Mailing List Requests", "Open custom bug entry form - mozlist");
+$sel->type_ok("listName", "test-list", "Enter name for mailing list");
+$sel->click_ok("listType", "value=mozilla.org", "Select type of mailing list");
+$sel->type_ok("listAdmin", $config->{'admin_user_login'}, "Enter list administator");
+$sel->type_ok("cc", $config->{'unprivileged_user_login'}, "Enter cc address");
+$sel->check_ok("name=groups", "value=infra", "Select private group");
+$sel->type_ok("comment", "--- Bug created by Selenium ---", "Enter bug description");
+$sel->click_ok("commit", undef, "Submit bug data to post_bug.cgi");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_like(qr/Bug \d+ Submitted/, "Bug created");
+my $mozlist_bug_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
+
 _check_product('Mozilla PR');
 _check_component('Mozilla PR', 'China - AMO');
 _check_group('mozilla-confidential');
