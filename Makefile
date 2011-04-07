@@ -55,4 +55,5 @@ bugzilla.tar.gz: bugzilla
 	rm bugzilla/.htaccess
 	find bugzilla/ -depth -name .bzr -type d -exec rm -rf {} \;
 	find bugzilla/ -depth -name .bzrignore -type f -exec rm -rf {} \;
+	/usr/bin/perl -p -i -e "s/sub object_before_create {/sub object_before_create { return;/g" bugzilla/extensions/BMO/Extension.pm
 	tar zcvf bugzilla.tar.gz bugzilla/
