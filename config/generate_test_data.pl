@@ -581,3 +581,11 @@ Bugzilla::Field::Choice->type($field)->create({ value => 'P3' });
 Bugzilla::Field::Choice->type($field)->create({ value => 'P4' });
 Bugzilla::Field::Choice->type($field)->create({ value => 'P5' });
 
+#####################################################################
+# Create the everyone group which every account is automatically in #
+#####################################################################
+
+Bugzilla::Group->create({ name        => 'everyone',
+                          description => 'Everyone with a Bugzilla account',
+                          isbuggroup  => 0,
+                          userregexp  => '.*' });
