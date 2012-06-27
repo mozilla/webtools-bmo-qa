@@ -10,6 +10,9 @@ my $config;
 BEGIN {
     print "reading the config file...\n";
     my $conf_file = "selenium_test.conf";
+    if (@ARGV) {
+        $conf_file = shift @ARGV;
+    }
     $config = do "$conf_file"
         or die "can't read configuration '$conf_file': $!$@";
 
@@ -482,9 +485,11 @@ my @fields = (
     { name        => 'cf_single_select',
       description => 'SingSel',
       type        => FIELD_TYPE_SINGLE_SELECT,
+      sortkey     => 200, 
       mailhead    => 0,
       enter_bug   => 1,
       custom      => 1,
+      obsolete    => 0, 
       values      => [qw(one two three)],
     },
 );
@@ -501,7 +506,8 @@ foreach my $f (@fields) {
         # that 'values' is not an existing column name.
         delete $f->{values};
     }
-    my $field = Bugzilla::Field->create($f);
+    Bugzilla::Field->create($f);
+    my $field = Bugzilla::Field->new({ name => $f->{name} });
 
     # Now populate the table with valid values, if necessary.
     next unless scalar @values;
