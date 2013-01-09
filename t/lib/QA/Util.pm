@@ -167,9 +167,12 @@ sub logout {
 # Display the bug form to enter a bug in the given product.
 sub file_bug_in_product {
     my ($sel, $product, $classification) = @_;
-
+    my $config = get_config();
     $classification ||= "Unclassified";
-    $sel->click_ok("link=New", undef, "Go create a new bug");
+    # BMO FIXME - Workaround the guided bug entry form for non-canconfirm users.
+    $sel->open_ok("/$config->{bugzilla_installation}/enter_bug.cgi?full=1&format=__default__", 
+                  undef, "Go create a new bug");
+    #$sel->click_ok("link=New", undef, "Go create a new bug");
     $sel->wait_for_page_to_load(WAIT_TIME);
     my $title = $sel->get_title();
     if ($title eq "Select Classification") {

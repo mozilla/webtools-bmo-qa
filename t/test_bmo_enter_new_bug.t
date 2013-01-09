@@ -9,6 +9,7 @@ use QA::Util;
 my ($sel, $config) = get_selenium();
 
 log_in($sel, $config, 'admin');
+set_parameters($sel, { "Bug Fields" => {"useclassification-off" => undef} });
 
 # mktgevent and swag are dependent so we create the mktgevent bug first so 
 # we can provide the bug id to swag
@@ -225,6 +226,7 @@ $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_like(qr/Bug \d+ Submitted/, "Bug created");
 my $poweredby_bug_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
+set_parameters($sel, { "Bug Fields" => {"useclassification-on" => undef} });
 logout($sel);
 
 sub _check_product {
@@ -278,12 +280,36 @@ sub _check_component {
         return 1;
     }
 
+    # Add the watch user for component watching
+    my $watch_user = lc $component . "@" . lc $product . ".bugs";
+    $watch_user =~ s/\s+/\-/g;
+
+    go_to_admin($sel);
+    $sel->click_ok("link=Users");
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+    $sel->title_is('Search users');
+    $sel->click_ok('link=add a new user');
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+    $sel->title_is('Add user');
+    $sel->type_ok('login', $watch_user);
+    $sel->type_ok('password', 'selenium', 'Enter password');
+    $sel->click_ok('add');
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+
+    go_to_admin($sel);
+    $sel->click_ok("link=components");
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+    $sel->title_is("Edit components for which product?");
+    $sel->click_ok("link=$product");
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+    $sel->title_is("Select component of product '$product'");
     $sel->click_ok("link=Add");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     $sel->title_is("Add component to the $product product");
     $sel->type_ok("component", $component);
     $sel->type_ok("description", $component_description);
     $sel->type_ok("initialowner", $config->{'admin_user_login'});
+    $sel->type_ok("watch_user", $watch_user);
     $sel->click_ok("create");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     $sel->title_is("Component Created");

@@ -35,6 +35,7 @@ use Bugzilla::Constants;
 use Bugzilla::Keyword;
 use Bugzilla::Config qw(:admin);
 use Bugzilla::User::Setting;
+use Bugzilla::Util qw(generate_random_password);
 
 my $dbh = Bugzilla->dbh;
 
@@ -63,6 +64,10 @@ my %set_params = (
     useqacontact  => 1,
     mail_delivery_method => 'Test',
     maxattachmentsize => 256,
+    defaultpriority => 'Highest',     # BMO CHANGE
+    timetrackinggroup => 'editbugs',  # BMO CHANGE
+    letsubmitterchoosepriority => 1,  # BMO CHANGE
+    createemailregexp => '.*',        # BMO CHANGE
 );
 
 my $params_modified;
@@ -309,6 +314,19 @@ for my $product (@products) {
         delete Bugzilla->user->{selectable_products};
 
         for my $component ( @{ $product->{components} } ) {
+            # BMO Change for ComponentWatching extension
+            my $watch_user = lc($component->{name}) . '@' . lc($new_product->name) . '.bugs';
+            $watch_user =~ s/\s+/\-/g;
+
+            Bugzilla::User->create({
+                login_name    => $watch_user, 
+                cryptpassword => generate_random_password(), 
+                disable_mail  => 1, 
+            });
+
+            my %params = %{ Bugzilla->input_params };
+            $params{watch_user} = $watch_user;
+            Bugzilla->input_params(\%params);
 
             Bugzilla::Component->create(
                 {   name             => $component->{name},
@@ -317,7 +335,6 @@ for my $product (@products) {
                     initialowner     => $component->{initialowner},
                     initialqacontact => $component->{initialqacontact},
                     initial_cc       => $component->{initial_cc},
-
                 }
             );
         }
@@ -556,6 +573,17 @@ if (Bugzilla::Bug->new('private_bug')->{error}) {
 # Create Attachments #
 ######################
 
+# BMO FIXME: Users must be in 'editbugs' to set their own
+# content type other than text/plain or application/octet-stream
+$group = new Bugzilla::Group( { name => 'editbugs' } );
+my $sth_add_mapping = $dbh->prepare(
+    qq{INSERT INTO user_group_map (user_id, group_id, isbless, grant_type)
+       VALUES (?, ?, ?, ?)});
+# Don't crash if the entry already exists.
+eval {
+    $sth_add_mapping->execute( Bugzilla->user->id, $group->id, 0, GRANT_DIRECT );
+};
+
 print "creating attachments...\n";
 # We use the contents of this script as the attachment.
 open(my $attachment_fh, '<', __FILE__) or die __FILE__ . ": $!";
@@ -575,6 +603,15 @@ foreach my $alias (qw(public_bug private_bug)) {
         });
     }
 }
+
+# BMO FIXME: Remove test user from 'editbugs' group
+my $sth_remove_mapping = $dbh->prepare(
+    qq{DELETE FROM user_group_map WHERE user_id = ? 
+       AND group_id = ? AND isbless = 0 AND grant_type = ?});
+# Don't crash if the entry already exists.
+eval {
+    $sth_remove_mapping->execute( Bugzilla->user->id, $group->id, GRANT_DIRECT );
+};
 
 ###################
 # Create Keywords #

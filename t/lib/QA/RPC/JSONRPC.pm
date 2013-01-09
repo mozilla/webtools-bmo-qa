@@ -2,7 +2,17 @@
 
 package QA::RPC::JSONRPC;
 use strict;
-use base qw(QA::RPC JSON::RPC::Client);
+
+BEGIN {
+    our @ISA = qw(QA::RPC);
+    if (eval { require JSON::RPC::Legacy::Client }) {
+        unshift(@ISA, 'JSON::RPC::Legacy::Client');
+    }
+    else {
+        require JSON::RPC::Client;
+        unshift(@ISA, 'JSON::RPC::Client');
+    }
+}
 
 use URI::Escape;
 
@@ -102,8 +112,17 @@ sub _get {
 
 package QA::RPC::JSONRPC::ReturnObject;
 use strict;
-use JSON::RPC::Client;
-use base qw(JSON::RPC::ReturnObject);
+
+BEGIN {
+    our @ISA = qw();
+    if (eval { require JSON::RPC::Legacy::Client }) {
+        unshift(@ISA, 'JSON::RPC::Legacy::ReturnObject');
+    }
+    else {
+        require JSON::RPC::Client;
+        unshift(@ISA, 'JSON::RPC::ReturnObject');
+    }
+}
 
 #################################
 # Consistency with XMLRPC::Lite #

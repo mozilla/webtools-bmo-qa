@@ -53,8 +53,8 @@
     <NC:persist RDF:resource="chrome://global/content/customizeToolbar.xul#CustomizeToolbarWindow"/>
   </RDF:Description>
   <RDF:Description RDF:about="chrome://browser/content/browser.xul#main-window"
-                   width="994"
-                   height="986"
+                   width="1280"
+                   height="800"
                    screenX="0"
                    screenY="26"
                    sizemode="normal" />
