@@ -170,6 +170,9 @@ for my $username (@usernames) {
 my $admin_user = Bugzilla::User->check($config->{admin_user_login});
 Bugzilla->set_user($admin_user);
 
+# add to the canconfirm group
+push(@{ $admin_user->{'groups'} }, Bugzilla::Group->new({ name => 'cancofirm' }));
+
 # Create missing status values
 my $field = Bugzilla::Field->new({ name => 'bug_status' });
 foreach my $value (qw(CONFIRMED IN_PROGRESS)) {
