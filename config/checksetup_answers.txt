@@ -19,7 +19,7 @@
  $answer{'diffpath'} = '/usr/bin';
  $answer{'webservergroup'} = '%USER%';
  $answer{'ADMIN_OK'} = 'Y';
- $answer{'ADMIN_EMAIL'} = 'admin@mozilla.org';
+ $answer{'ADMIN_EMAIL'} = 'admin@mozilla.bugs';
  $answer{'ADMIN_PASSWORD'} = 'password';
  $answer{'ADMIN_REALNAME'} = 'QA Admin';
  $answer{'NO_PAUSE'} = 1;
