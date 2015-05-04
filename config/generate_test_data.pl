@@ -170,6 +170,16 @@ for my $username (@usernames) {
 my $admin_user = Bugzilla::User->check($config->{admin_user_login});
 Bugzilla->set_user($admin_user);
 
+# Create missing status values
+my $field = Bugzilla::Field->new({ name => 'bug_status' });
+foreach my $value (qw(CONFIRMED IN_PROGRESS) {
+    my $created_value = Bugzilla::Field::Choice->type($field)->create({
+        value   => $value,
+        sortkey => 0,
+        is_open => 1
+    });
+}
+
 my %field_values = (
     'priority'     => 'Highest',
     'bug_status'   => 'CONFIRMED',
