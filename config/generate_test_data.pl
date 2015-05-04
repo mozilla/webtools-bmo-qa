@@ -172,7 +172,7 @@ Bugzilla->set_user($admin_user);
 
 # Create missing status values
 my $field = Bugzilla::Field->new({ name => 'bug_status' });
-foreach my $value (qw(CONFIRMED IN_PROGRESS) {
+foreach my $value (qw(CONFIRMED IN_PROGRESS)) {
     my $created_value = Bugzilla::Field::Choice->type($field)->create({
         value   => $value,
         sortkey => 0,
