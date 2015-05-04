@@ -57,6 +57,15 @@ if ($urlbase =~ /^https/) {
     $urlbase =~ s/^https(.+)$/http$1/;
 }
 
+# Create extra priorities
+my $field = Bugzilla::Field->new({ name => 'priority' });
+foreach my $value (qw(Highest High Normal Low Lowest)) {
+    Bugzilla::Field::Choice->type($field)->create({
+        value   => $value,
+        sortkey => 0
+    });
+}
+
 my %set_params = (
     urlbase => $urlbase,
     sslbase => $sslbase,
@@ -79,15 +88,6 @@ foreach my $param (keys %set_params) {
 }
 
 write_params() if $params_modified;
-
-# Create extra priorities
-my $field = Bugzilla::Field->new({ name => 'priority' });
-foreach my $value (qw(Highest High Normal Low Lowest)) {
-    Bugzilla::Field::Choice->type($field)->create({
-        value   => $value,
-        sortkey => 0
-    });
-}
 
 ##########################################################################
 # Set Default User Preferences
