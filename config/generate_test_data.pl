@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 my $conf_path;
-my $config; 
+my $config;
 
 BEGIN {
     print "reading the config file...\n";
@@ -64,7 +64,7 @@ my %set_params = (
     useqacontact  => 1,
     mail_delivery_method => 'Test',
     maxattachmentsize => 256,
-    defaultpriority => '--',          # BMO CHANGE
+    defaultpriority => 'Highest',     # BMO CHANGE
     timetrackinggroup => 'editbugs',  # BMO CHANGE
     letsubmitterchoosepriority => 1,  # BMO CHANGE
     createemailregexp => '.*',        # BMO CHANGE
@@ -79,6 +79,15 @@ foreach my $param (keys %set_params) {
 }
 
 write_params() if $params_modified;
+
+# Create extra priorities
+my $field = Bugzilla::Field->new({ name => 'priority' });
+foreach my $value (qw(Highest High Normal Low Lowest)) {
+    Bugzilla::Field::Choice->type($field)->create(
+        value   => $value
+        sortkey => 0,
+    });
+}
 
 ##########################################################################
 # Set Default User Preferences
@@ -114,14 +123,14 @@ for my $username (@usernames) {
 
     my $password;
     my $login;
-       
+
     if ($username eq 'permanent_user') {
         $password = $config->{admin_user_passwd};
         $login = $config->{$username};
     }
     elsif ($username eq 'no-privs') {
         $password = $config->{unprivileged_user_passwd};
-        $login = $config->{unprivileged_user_login};   
+        $login = $config->{unprivileged_user_login};
     }
     elsif ($username eq 'QA-Selenium-TEST') {
         $password = $config->{QA_Selenium_TEST_user_passwd};
@@ -224,7 +233,7 @@ my @products = (
         versions         => ['unspecified', 'Another1', 'Another2'],
         milestones       => ['AnotherMS1', 'AnotherMS2', 'Milestone'],
         defaultmilestone => '---',
-        
+
         components       => [
             {   name             => "c1",
                 description      => "c1",
@@ -294,7 +303,7 @@ my @products = (
 
 print "creating products...\n";
 for my $product (@products) {
-    my $new_product = 
+    my $new_product =
         Bugzilla::Product->new({ name => $product->{product_name} });
     if (!$new_product) {
         my $class_id = 1;
@@ -319,9 +328,9 @@ for my $product (@products) {
             $watch_user =~ s/\s+/\-/g;
 
             Bugzilla::User->create({
-                login_name    => $watch_user, 
-                cryptpassword => generate_random_password(), 
-                disable_mail  => 1, 
+                login_name    => $watch_user,
+                cryptpassword => generate_random_password(),
+                disable_mail  => 1,
             });
 
             my %params = %{ Bugzilla->input_params };
@@ -341,8 +350,8 @@ for my $product (@products) {
     }
 
     foreach my $version (@{ $product->{versions} }) {
-        if (!new Bugzilla::Version({ name    => $version, 
-                                     product => $new_product })) 
+        if (!new Bugzilla::Version({ name    => $version,
+                                     product => $new_product }))
         {
             Bugzilla::Version->create({value => $version, product => $new_product});
         }
@@ -502,11 +511,11 @@ my @fields = (
     { name        => 'cf_single_select',
       description => 'SingSel',
       type        => FIELD_TYPE_SINGLE_SELECT,
-      sortkey     => 200, 
+      sortkey     => 200,
       mailhead    => 0,
       enter_bug   => 1,
       custom      => 1,
-      obsolete    => 0, 
+      obsolete    => 0,
       values      => [qw(one two three)],
     },
 );
@@ -606,7 +615,7 @@ foreach my $alias (qw(public_bug private_bug)) {
 
 # BMO FIXME: Remove test user from 'editbugs' group
 my $sth_remove_mapping = $dbh->prepare(
-    qq{DELETE FROM user_group_map WHERE user_id = ? 
+    qq{DELETE FROM user_group_map WHERE user_id = ?
        AND group_id = ? AND isbless = 0 AND grant_type = ?});
 # Don't crash if the entry already exists.
 eval {
