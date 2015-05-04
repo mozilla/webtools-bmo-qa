@@ -84,8 +84,8 @@ write_params() if $params_modified;
 my $field = Bugzilla::Field->new({ name => 'priority' });
 foreach my $value (qw(Highest High Normal Low Lowest)) {
     Bugzilla::Field::Choice->type($field)->create(
-        value   => $value
-        sortkey => 0,
+        value   => $value,
+        sortkey => 0
     });
 }
 
