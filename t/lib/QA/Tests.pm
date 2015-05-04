@@ -63,7 +63,7 @@ sub bug_tests {
     },
     { args  => { ids => [undef] },
       error => "You must enter a valid bug number",
-      test  => 'Passing undef as bug id param returns error "Invalid Bug ID"', 
+      test  => 'Passing undef as bug id param returns error "Invalid Bug ID"',
     },
     { args  => { ids => [INVALID_BUG_ALIAS] },
       error => "nor an alias to a bug",

@@ -30,8 +30,7 @@ $xmlrpc->bz_call_success('Bug.update', {
     dupe_of => $public_id,
     is_creator_accessible => 0,
     keywords => { set => ['test-keyword-1', 'test-keyword-2'] },
-    see_also => { add => ["${base_url}show_bug.cgi?id=$public_id",
-                          "http://landfill.bugzilla.org/show_bug.cgi?id=123456"] },
+    see_also => { add => ["${base_url}show_bug.cgi?id=$public_id"] },
     cf_qa_status => ['in progress', 'verified'],
     cf_single_select => 'two',
 }, 'Update the private bug');
@@ -45,8 +44,7 @@ $private_bug->{resolution} = 'DUPLICATE';
 $private_bug->{is_creator_accessible} = 0;
 $private_bug->{is_cc_accessible} = 1;
 $private_bug->{keywords} = ['test-keyword-1', 'test-keyword-2'];
-$private_bug->{see_also} = ["${base_url}show_bug.cgi?id=$public_id",
-                            "http://landfill.bugzilla.org/show_bug.cgi?id=123456"];
+$private_bug->{see_also} = ["${base_url}show_bug.cgi?id=$public_id"];
 $private_bug->{cf_qa_status} = ['in progress', 'verified'];
 $private_bug->{cf_single_select} = 'two';
 
@@ -57,8 +55,7 @@ $public_bug->{is_open} = 1;
 $public_bug->{is_creator_accessible} = 1;
 $public_bug->{is_cc_accessible} = 1;
 $public_bug->{keywords} = [];
-# Local Bugzilla bugs are automatically updated.
-$public_bug->{see_also} = ["${base_url}show_bug.cgi?id=$private_id"];
+$public_bug->{see_also} = [];
 $public_bug->{cf_qa_status} = [];
 $public_bug->{cf_single_select} = '---';
 

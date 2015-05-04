@@ -46,10 +46,12 @@ ok($text =~ qr/The component Pegasus has been created/, "Component 'Pegasus' cre
 file_bug_in_product($sel, 'Eureka');
 # CONFIRMED must be the default bug status for users with editbugs privs.
 $sel->selected_label_is("bug_status", "CONFIRMED");
-my $bug_summary = "Aries";
-$sel->type_ok("short_desc", $bug_summary);
+$sel->type_ok("short_desc", "Aries");
 $sel->type_ok("comment", "1st constellation");
-my $bug1_id = create_bug($sel, $bug_summary);
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_like(qr/Bug \d+ Submitted/);
+my $bug1_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
 # Now vote for this bug.
 
@@ -74,10 +76,12 @@ ok($full_text =~ /4 votes used out of 10 allowed/, "Display the number of votes 
 
 file_bug_in_product($sel, 'Eureka');
 $sel->select_ok("bug_status", "UNCONFIRMED");
-my $bug_summary2 = "Taurus";
-$sel->type_ok("short_desc", $bug_summary2);
+$sel->type_ok("short_desc", "Taurus");
 $sel->type_ok("comment", "2nd constellation");
-my $bug2_id = create_bug($sel, $bug_summary2);
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_like(qr/Bug \d+ Submitted/);
+my $bug2_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
 # Put enough votes on this bug to confirm it by popular votes.
 
@@ -95,10 +99,12 @@ $sel->is_text_present_ok("Bug $bug2_id confirmed by number of votes");
 
 file_bug_in_product($sel, 'Eureka');
 $sel->select_ok("bug_status", "UNCONFIRMED");
-my $bug_summary3 = "Gemini";
-$sel->type_ok("short_desc", $bug_summary3);
+$sel->type_ok("short_desc", "Gemini");
 $sel->type_ok("comment", "3rd constellation");
-my $bug3_id = create_bug($sel, $bug_summary3);
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_like(qr/Bug \d+ Submitted/);
+my $bug3_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
 # Vote for this bug, but remain below the threshold required
 # to confirm the bug by popular votes.
@@ -144,7 +150,7 @@ ok($text =~ /You tried to use 12 votes in the Eureka product, which exceeds the 
 
 edit_product($sel, 'Eureka');
 $sel->type_ok("votestoconfirm", 2);
-$sel->click_ok("update-product");
+$sel->click_ok("submit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Updating Product 'Eureka'");
 $full_text = trim($sel->get_body_text());
@@ -158,7 +164,7 @@ $sel->click_ok("link='Eureka'");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Edit Product 'Eureka'");
 $sel->type_ok("maxvotesperbug", 4);
-$sel->click_ok("update-product");
+$sel->click_ok("submit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Updating Product 'Eureka'");
 $full_text = trim($sel->get_body_text());
@@ -179,7 +185,7 @@ ok($text =~ /4 votes/, "4 votes remaining");
 
 edit_product($sel, "Eureka");
 $sel->type_ok("votesperuser", 5);
-$sel->click_ok("update-product");
+$sel->click_ok("submit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Updating Product 'Eureka'");
 $full_text = trim($sel->get_body_text());
@@ -198,7 +204,7 @@ ok($text =~ /2 votes/, "2 votes remaining");
 
 edit_product($sel, "Eureka");
 $sel->click_ok("allows_unconfirmed");
-$sel->click_ok("update-product");
+$sel->click_ok("submit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Updating Product 'Eureka'");
 $full_text = trim($sel->get_body_text());
@@ -208,10 +214,12 @@ ok($full_text =~ /The product no longer allows the UNCONFIRMED status/, "Disable
 
 file_bug_in_product($sel, "Eureka");
 ok(!scalar(grep {$_ eq "UNCONFIRMED"} $sel->get_select_options("bug_status")), "UNCONFIRMED not listed");
-my $bug_summary4 = "Cancer";
-$sel->type_ok("short_desc", $bug_summary4);
+$sel->type_ok("short_desc", "Cancer");
 $sel->type_ok("comment", "4th constellation");
-my $bug4_id = create_bug($sel, $bug_summary4);
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_like(qr/Bug \d+ Submitted/);
+my $bug4_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
 # Now delete the 'Eureka' product.
 

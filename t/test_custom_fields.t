@@ -173,6 +173,7 @@ my $bug_summary2 = "Et de un";
 $sel->type_ok("short_desc", $bug_summary2);
 $sel->select_ok("bug_severity", "critical");
 $sel->type_ok("cf_qa_bugid_$bug1_id", $bug1_id);
+$sel->type_ok("comment", "hops!");
 my $bug2_id = create_bug($sel, $bug_summary2);
 
 # Both fields are editable.
@@ -180,7 +181,7 @@ my $bug2_id = create_bug($sel, $bug_summary2);
 $sel->type_ok("cf_qa_freetext_$bug1_id", "bonsai");
 $sel->selected_label_is("cf_qa_list_$bug1_id", "---");
 $sel->select_ok("bug_status", "label=SUSPENDED");
-edit_bug($sel, $bug2_id, $bug_summary2);
+edit_bug($sel, $bug2_id);
 
 go_to_bug($sel, $bug1_id);
 $sel->type_ok("cf_qa_freetext_$bug1_id", "dumbo");
@@ -200,7 +201,7 @@ $sel->is_text_present_ok("List$bug1_id: storage");
 $sel->is_text_present_ok("Status: IN_QA UPSTREAM");
 go_to_bug($sel, $bug2_id);
 $sel->select_ok("cf_qa_list_$bug1_id", "label=storage");
-edit_bug($sel, $bug2_id, $bug_summary2);
+edit_bug($sel, $bug2_id);
 
 # Test searching for bugs using the custom fields
 
@@ -209,9 +210,9 @@ $sel->remove_all_selections_ok("product");
 $sel->add_selection_ok("product", "TestProduct");
 $sel->remove_all_selections("bug_status");
 $sel->remove_all_selections("resolution");
-$sel->select_ok("f1", "label=List$bug1_id");
-$sel->select_ok("o1", "label=is equal to");
-$sel->type_ok("v1", "storage");
+$sel->select_ok("field0-0-0", "label=List$bug1_id");
+$sel->select_ok("type0-0-0", "label=is equal to");
+$sel->type_ok("value0-0-0", "storage");
 $sel->click_ok("Search");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Bug List");
@@ -236,7 +237,7 @@ $sel->title_like(qr/^Bug $bug2_id/);
 $sel->value_is("cf_qa_freetext_$bug1_id", "thanks");
 $sel->selected_label_is("cf_qa_list_$bug1_id", "---");
 $sel->select_ok("cf_qa_list_$bug1_id", "label=storage");
-edit_bug($sel, $bug2_id, $bug_summary2);
+edit_bug($sel, $bug2_id);
 
 # Let's now test custom field visibility.
 
@@ -248,8 +249,7 @@ $sel->click_ok("link=cf_qa_list_$bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Edit the Custom Field 'cf_qa_list_$bug1_id' (List$bug1_id)");
 $sel->select_ok("visibility_field_id", "label=Severity (bug_severity)");
-$sel->add_selection_ok("visibility_values", "label=blocker");
-$sel->add_selection_ok("visibility_values", "label=critical");
+$sel->select_ok("visibility_value_id", "label=critical");
 $sel->click_ok("edit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Custom Field Updated");
@@ -367,7 +367,7 @@ go_to_bug($sel, $bug1_id);
 $sel->is_text_present_ok("Freetext$bug1_id: thanks");
 $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", $config->{unprivileged_user_login});
-edit_bug($sel, $bug1_id, $bug_summary);
+edit_bug($sel, $bug1_id);
 logout($sel);
 
 # Disable the remaining free text field.
@@ -402,12 +402,12 @@ $sel->is_text_present_ok("Sorry, but the 'SUSPENDED' value cannot be deleted");
 
 go_to_bug($sel, $bug2_id);
 $sel->select_ok("bug_status", "CONFIRMED");
-edit_bug($sel, $bug2_id, $bug_summary2);
+edit_bug($sel, $bug2_id);
 
 go_to_bug($sel, $bug1_id);
 $sel->select_ok("bug_status", "VERIFIED");
 $sel->select_ok("resolution", "INVALID");
-edit_bug($sel, $bug1_id, $bug_summary);
+edit_bug($sel, $bug1_id);
 
 # Unused values can be deleted.
 

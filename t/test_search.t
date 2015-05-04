@@ -37,7 +37,9 @@ $sel->click_ok("editme_action");
 $bug_summary .= ": my ID is $bug1_id";
 $sel->type_ok("short_desc", $bug_summary);
 $sel->type_ok("comment", "Updating bug summary....");
-edit_bug($sel, $bug1_id, $bug_summary);
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Bug $bug1_id processed");
 
 # Test pronoun substitution.
 
@@ -45,13 +47,15 @@ open_advanced_search_page($sel);
 $sel->remove_all_selections("bug_status");
 $sel->remove_all_selections("resolution");
 $sel->type_ok("short_desc", "my ID is $bug1_id");
-$sel->select_ok("f1", "label=Commenter");
-$sel->select_ok("o1", "label=is equal to");
-$sel->type_ok("v1", "%user%");
-$sel->click_ok("add_button");
-$sel->select_ok("f2", "label=Comment");
-$sel->select_ok("o2", "label=contains the string");
-$sel->type_ok("v2", "coming buglist");
+$sel->select_ok("field0-0-0", "label=Commenter");
+$sel->select_ok("type0-0-0", "label=is equal to");
+$sel->type_ok("value0-0-0", "%user%");
+$sel->click_ok("cmd-add0-1-0");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Search for bugs");
+$sel->select_ok("field0-1-0", "label=Comment");
+$sel->select_ok("type0-1-0", "label=contains the string");
+$sel->type_ok("value0-1-0", "coming buglist");
 $sel->click_ok("Search");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Bug List");

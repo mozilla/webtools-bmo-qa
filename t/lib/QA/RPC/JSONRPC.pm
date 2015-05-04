@@ -3,14 +3,16 @@
 package QA::RPC::JSONRPC;
 use strict;
 
+use QA::RPC;
 BEGIN {
     our @ISA = qw(QA::RPC);
-    if (eval { require JSON::RPC::Legacy::Client }) {
-        unshift(@ISA, 'JSON::RPC::Legacy::Client');
+
+    if (eval { require JSON::RPC::Client }) {
+        push(@ISA, 'JSON::RPC::Client');
     }
     else {
-        require JSON::RPC::Client;
-        unshift(@ISA, 'JSON::RPC::Client');
+        require JSON::RPC::Legacy::Client;
+        push(@ISA, 'JSON::RPC::Legacy::Client');
     }
 }
 
@@ -99,7 +101,7 @@ sub _get {
     my $callback = $self->_bz_callback;
     if (defined $callback and $result->is_success) {
         my $content = $result->content;
-        $content =~ s/^\Q$callback(\E(.*)\)$/$1/s;
+        $content =~ s/^(?:\/\*\*\/)?\Q$callback(\E(.*)\)$/$1/s;
         $result->content($content);
         # We don't need this anymore, and we don't want it to affect
         # future calls.
@@ -114,13 +116,12 @@ package QA::RPC::JSONRPC::ReturnObject;
 use strict;
 
 BEGIN {
-    our @ISA = qw();
-    if (eval { require JSON::RPC::Legacy::Client }) {
-        unshift(@ISA, 'JSON::RPC::Legacy::ReturnObject');
+    if (eval { require JSON::RPC::Client }) {
+        our @ISA = qw(JSON::RPC::ReturnObject);
     }
     else {
-        require JSON::RPC::Client;
-        unshift(@ISA, 'JSON::RPC::ReturnObject');
+        require JSON::RPC::Legacy::Client;
+        our @ISA = qw(JSON::RPC::Legacy::ReturnObject);
     }
 }
 

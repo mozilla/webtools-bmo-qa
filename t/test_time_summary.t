@@ -8,6 +8,8 @@ use QA::Util;
 
 my ($sel, $config) = get_selenium();
 
+my $test_bug_1 = $config->{test_bug_1};
+
 # Set the timetracking group to "editbugs", which is the default value for this parameter.
 
 log_in($sel, $config, 'admin');
@@ -16,16 +18,16 @@ set_parameters($sel, { "Group Security" => {"timetrackinggroup" => {type => "sel
 # Add some Hours Worked to a bug so that we are sure at least one bug
 # will be present in our buglist below.
 
-file_bug_in_product($sel, "TestProduct");
-$sel->select_ok("component", "TestComponent");
-my $bug_summary = "Rocket science";
-$sel->type_ok("short_desc", $bug_summary);
-$sel->type_ok("comment", "Time flies");
-my $bug1_id = create_bug($sel, $bug_summary);
-
+go_to_bug($sel, $test_bug_1);
 $sel->type_ok("work_time", 2.6);
 $sel->type_ok("comment", "I did some work");
-edit_bug_and_return($sel, $bug1_id, $bug_summary);
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Bug $test_bug_1 processed");
+# Make sure the correct bug is redisplayed.
+$sel->click_ok("link=bug $test_bug_1");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_like(qr/^Bug $test_bug_1/, "Display bug $test_bug_1");
 $sel->is_text_present_ok("I did some work");
 $sel->is_text_present_ok("Additional hours worked: 2.6");
 
@@ -40,9 +42,9 @@ ok($error_msg =~ /You apparently didn't choose any bugs to view/, "No data displ
 
 open_advanced_search_page($sel);
 $sel->remove_all_selections("bug_status");
-$sel->select_ok("f1", "label=Hours Worked");
-$sel->select_ok("o1", "label=is greater than");
-$sel->type_ok("v1", "0");
+$sel->select_ok("field0-0-0", "label=Hours Worked");
+$sel->select_ok("type0-0-0", "label=is greater than");
+$sel->type_ok("value0-0-0", "0");
 $sel->click_ok("Search");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Bug List");
@@ -79,13 +81,13 @@ ok($error_msg =~ /'2009-04-as' is not a legal date/, "Illegal end date");
 # above has been taken into account). So we are just making sure that
 # the page is displayed and throws no error.
 
-go_to_bug($sel, $bug1_id);
+go_to_bug($sel, $test_bug_1);
 $sel->click_ok("//a[contains(text(),'Summarize time')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Time Summary for Bug $bug1_id");
+$sel->title_is("Time Summary for Bug $test_bug_1");
 $sel->check_ok("inactive");
 $sel->check_ok("owner");
 $sel->click_ok("summarize");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Time Summary for Bug $bug1_id");
+$sel->title_is("Time Summary for Bug $test_bug_1");
 logout($sel);

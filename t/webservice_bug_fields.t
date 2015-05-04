@@ -7,7 +7,7 @@ use List::Util qw(first);
 use QA::Util;
 
 my ($config, @clients) = get_rpc_clients();
-plan tests => ($config->{test_extensions} ? 1338 : 1320);
+plan tests => ($config->{test_extensions} ? 1356 : 1338);
 
 use constant INVALID_FIELD_NAME => 'invalid_field';
 use constant INVALID_FIELD_ID => -1;
@@ -19,6 +19,7 @@ sub GLOBAL_GENERAL_FIELDS {
         attachments.isobsolete
         attachments.ispatch
         attachments.isprivate
+        attachments.isurl
         attachments.mimetype
         attachments.submitter
 

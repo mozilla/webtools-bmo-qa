@@ -34,7 +34,7 @@ sub attach {
 }
 
 my ($public_bug, $private_bug) =
-    $xmlrpc->bz_create_test_bugs($config, 'private');
+    $xmlrpc->bz_create_test_bugs('private');
 my $public_id = $public_bug->{id};
 my $private_id = $private_bug->{id};
 
@@ -68,7 +68,7 @@ my @tests = (
     { user  => 'unprivileged',
       args  => attach(''),
       error => "You must enter a valid bug number",
-      test  => 'Passing undef as bug id param returns error "Invalid Bug ID"',
+      test  => 'Passing empty bug id returns error "Invalid Bug ID"',
     },
     { user  => 'unprivileged',
       args  => attach(INVALID_BUG_ALIAS),
@@ -173,6 +173,7 @@ foreach my $rpc ($jsonrpc, $xmlrpc) {
                        post_success => \&post_success, pre_call => \&pre_call);
 }
 
+# We have to encode data manually when using JSON-RPC, else it fails.
 sub pre_call {
     my ($t, $rpc) = @_;
     return if !$rpc->isa('QA::RPC::JSONRPC');
@@ -206,6 +207,11 @@ sub post_success {
                $rpc->TYPE . ": Attachment $id content type is correct");
         }
 
+        if ($rpc->isa('QA::RPC::JSONRPC')) {
+            # We encoded data in pre_call(), so we have to restore it to its original content.
+            $t->{args}->{data} = decode_base64($t->{args}->{data});
+            $attachment->{data} = decode_base64($attachment->{data});
+        }
         is($attachment->{data}, $t->{args}->{data},
            $rpc->TYPE . ": Attachment $id data is correct");
     }

@@ -17,7 +17,7 @@ file_bug_in_product($sel, "TestProduct");
 my $bug_summary = "Security checks";
 $sel->type_ok("short_desc", $bug_summary);
 $sel->type_ok("comment", "This bug will be used to test security fixes.");
-$sel->type_ok("data", "/var/www/html/selenium/bugzilla/patch.diff");
+$sel->type_ok("data", $config->{attachment_file});
 $sel->type_ok("description", "simple patch, v1");
 $sel->click_ok("ispatch");
 my $bug1_id = create_bug($sel, $bug_summary);
@@ -33,28 +33,10 @@ set_parameters($sel, { "Attachments" => {"allow_attachment_display-on" => undef,
                                          "reset-attachment_base" => undef} });
 
 go_to_bug($sel, $bug1_id);
-$sel->click_ok("link=Add an attachment");
+$sel->click_ok("link=simple patch, v1");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create New Attachment for Bug #$bug1_id");
-$sel->type_ok("attach_text", "<html>\n<head>\n<title>I want your cookies</title>\n<head>\n" .
-                             "<body>\n<script type='text/javascript'>document.write(document.cookie);</script>\n" .
-                             "</body>\n</html>", "Writing text into the attachment textarea");
-$sel->type_ok("description", "show my cookies");
-edit_bug($sel, $bug1_id, $bug_summary, {id => "create"});
-my $alink = $sel->get_attribute('//a[@title="show my cookies"]@href');
-$alink =~ /id=(\d+)/;
-my $attach1_id = $1;
-$sel->click_ok("link=Attachment #$attach1_id");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Attachment $attach1_id Details for Bug $bug1_id");
-$sel->click_ok("link=edit details");
-$sel->type_ok("contenttypeentry", "text/html");
-edit_bug($sel, $bug1_id, $bug_summary, {id => "update"});
-
-$sel->click_ok("link=show my cookies");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("I want your cookies");
-my @cookies = split(/[\s;]+/, $sel->get_body_text());
+$sel->title_is("");
+my @cookies = split(/[\s;]+/, $sel->get_cookie());
 my $nb_cookies = scalar @cookies;
 ok($nb_cookies, "Found $nb_cookies cookies:\n" . join("\n", @cookies));
 ok(!$sel->is_cookie_present("Bugzilla_login"), "Bugzilla_login not accessible");
@@ -66,12 +48,12 @@ $sel->title_like(qr/^Bug $bug1_id /);
 # Alternate host for attachments; no cookie should be accessible.
 
 set_parameters($sel, { "Attachments" => {"attachment_base" => {type  => "text",
-                                                               value => "http://127.0.0.1/$urlbase"}} });
+                                                               value => "http://127.0.0.1/$urlbase/"}} });
 go_to_bug($sel, $bug1_id);
-$sel->click_ok("link=show my cookies");
+$sel->click_ok("link=simple patch, v1");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("I want your cookies");
-@cookies = split(/[\s;]+/, $sel->get_body_text());
+$sel->title_is("");
+@cookies = split(/[\s;]+/, $sel->get_cookie());
 $nb_cookies = scalar @cookies;
 ok(!$nb_cookies, "No cookies found");
 ok(!$sel->is_cookie_present("Bugzilla_login"), "Bugzilla_login not accessible");
@@ -171,6 +153,7 @@ $sel->click_ok("link=View");
 # Wait 1 second to give the browser a chance to display the attachment.
 # Do not use wait_for_page_to_load_ok() as the File Saver will never go away.
 sleep(1);
+$sel->title_like(qr/Attachment \d+ Details for Bug $bug1_id/);
 ok(!$sel->is_text_present('@@'), "Patch not displayed");
 
 # Enable viewing attachments.

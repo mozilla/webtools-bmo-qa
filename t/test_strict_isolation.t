@@ -25,19 +25,26 @@ $sel->type_ok("comment", "Unallowed users refused");
 my $master_gid = $sel->get_attribute('//input[@type="checkbox" and @name="groups" and @value="Master"]@id');
 $sel->check_ok($master_gid);
 $master_gid =~ s/group_//;
-my $bug1_id = create_bug($sel, $bug_summary);
+$sel->click_ok('commit');
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+my $bug1_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
+$sel->title_like(qr/^Bug $bug1_id Submitted/, "Bug $bug1_id created");
 
 # At that point, CANEDIT is off and so everybody can be CC'ed to the bug.
 
 $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", "$qa_user, $no_privs_user");
-edit_bug_and_return($sel, $bug1_id, $bug_summary);
-
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Bug $bug1_id processed");
+go_to_bug($sel, $bug1_id);
 $sel->click_ok("cc_edit_area_showhide");
 $sel->add_selection_ok("cc", "label=$no_privs_user");
 $sel->add_selection_ok("cc", "label=$qa_user");
 $sel->check_ok("removecc");
-edit_bug($sel, $bug1_id, $bug_summary);
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Bug $bug1_id processed");
 
 # Now enable CANEDIT for the "Master" group. This will enable strict isolation
 # for the product.
@@ -91,14 +98,20 @@ $sel->title_is("User $qa_user updated");
 go_to_bug($sel, $bug1_id);
 $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", $qa_user);
-edit_bug_and_return($sel, $bug1_id, $bug_summary);
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Bug $bug1_id processed");
+go_to_bug($sel, $bug1_id);
 $sel->click_ok("cc_edit_area_showhide");
 $sel->add_selection_ok("cc", "label=$qa_user");
 $sel->check_ok("removecc");
-edit_bug_and_return($sel, $bug1_id, $bug_summary);
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Bug $bug1_id processed");
 
 # The powerless user still cannot be CC'ed.
 
+go_to_bug($sel, $bug1_id);
 $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", "$qa_user, $no_privs_user");
 $sel->click_ok("commit");
