@@ -7,7 +7,7 @@ use List::Util qw(first);
 use QA::Util;
 
 my ($config, @clients) = get_rpc_clients();
-plan tests => ($config->{test_extensions} ? 1356 : 1338);
+plan tests => ($config->{test_extensions} ? 1338 : 1320);
 
 use constant INVALID_FIELD_NAME => 'invalid_field';
 use constant INVALID_FIELD_ID => -1;
@@ -19,7 +19,6 @@ sub GLOBAL_GENERAL_FIELDS {
         attachments.isobsolete
         attachments.ispatch
         attachments.isprivate
-        attachments.isurl
         attachments.mimetype
         attachments.submitter
 
@@ -124,9 +123,10 @@ foreach my $rpc (@clients) {
 
         ok(defined $field_data->{values}, 
            "$field has 'values' defined");
-        ok(scalar @{ $field_data->{values} },
-           "$field has at least one value");
-        my $first_value = $field_data->{values}->[0];
+        my $num_values = scalar @{ $field_data->{values} };
+        ok($num_values, "$field has $num_values values");
+        # The first bug status is a fake one and has no name, so we choose the 2nd item.
+        my $first_value = $field_data->{values}->[1];
         ok(defined $first_value->{name}, 'The first value has a name')
             or diag(Dumper($field_data->{values}));
         # The sortkey for milestones can be negative.
@@ -135,7 +135,7 @@ foreach my $rpc (@clients) {
 
         ok(defined $first_value->{visibility_values},
            "$field has visibilty_values defined on its first value")
-            or diag(Dumper($field_data));
+            or diag(Dumper($field_data->{values}));
         my @value_visibility_values = map { @{ $_->{visibility_values} } }
                                       @{ $field_data->{values} };
         my $undefs = grep { !defined $_ } @value_visibility_values;

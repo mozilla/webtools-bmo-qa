@@ -4,6 +4,8 @@
 use strict;
 use warnings;
 
+use Cwd;
+
 my $conf_path;
 my $config;
 
@@ -57,9 +59,19 @@ if ($urlbase =~ /^https/) {
     $urlbase =~ s/^https(.+)$/http$1/;
 }
 
-# Create extra priorities
+# Create missing priorities
+# BMO uses P1-P5 which is different from upstream
 my $field = Bugzilla::Field->new({ name => 'priority' });
 foreach my $value (qw(Highest High Normal Low Lowest)) {
+    Bugzilla::Field::Choice->type($field)->create({
+        value   => $value,
+        sortkey => 0
+    });
+}
+
+# Add missing platforms
+$field = Bugzilla::Field->new({ name => 'rep_platform' });
+foreach my $value (qw(PC)) {
     Bugzilla::Field::Choice->type($field)->create({
         value   => $value,
         sortkey => 0
@@ -163,25 +175,128 @@ for my $username (@usernames) {
 }
 
 ##########################################################################
+# Bug statuses
+##########################################################################
+
+# We need to add in the upstream statuses in addition to the BMO ones.
+
+my @statuses = (
+    {
+        value       => undef,
+        transitions => [['UNCONFIRMED', 0], ['CONFIRMED', 0], ['NEW', 0],
+                        ['ASSIGNED', 0], ['IN_PROGRESS', 0]],
+    },
+    {
+        value       => 'UNCONFIRMED',
+        sortkey     => 100,
+        isactive    => 1,
+        isopen      => 1,
+        transitions => [['CONFIRMED', 0], ['NEW', 0], ['ASSIGNED', 0],
+                        ['IN_PROGRESS', 0], ['RESOLVED', 0]],
+    },
+    {
+        value       => 'CONFIRMED',
+        sortkey     => 200,
+        isactive    => 1,
+        isopen      => 1,
+        transitions => [['UNCONFIRMED', 0], ['NEW', 0], ['ASSIGNED', 0],
+                        ['IN_PROGRESS', 0], ['RESOLVED', 0]],
+    },
+    {
+        value       => 'NEW',
+        sortkey     => 300,
+        isactive    => 1,
+        isopen      => 1,
+        transitions => [['UNCONFIRMED', 0], ['CONFIRMED', 0], ['ASSIGNED', 0],
+                        ['IN_PROGRESS', 0], ['RESOLVED', 0]],
+    },
+    {
+        value       => 'ASSIGNED',
+        sortkey     => 400,
+        isactive    => 1,
+        isopen      => 1,
+        transitions => [['UNCONFIRMED', 0], ['CONFIRMED', 0], ['NEW', 0],
+                        ['IN_PROGRESS', 0], ['RESOLVED', 0]],
+    },
+    {
+        value       => 'IN_PROGRESS',
+        sortkey     => 500,
+        isactive    => 1,
+        isopen      => 1,
+        transitions => [['UNCONFIRMED', 0], ['CONFIRMED', 0], ['NEW', 0],
+                        ['ASSIGNED', 0], ['RESOLVED', 0]],
+    },
+    {
+        value       => 'REOPENED',
+        sortkey     => 600,
+        isactive    => 1,
+        isopen      => 1,
+        transitions => [['UNCONFIRMED', 0], ['CONFIRMED', 0], ['NEW', 0],
+                        ['ASSIGNED', 0], ['IN_PROGRESS', 0], ['RESOLVED', 0]],
+    },
+    {
+        value       => 'RESOLVED',
+        sortkey     => 700,
+        isactive    => 1,
+        isopen      => 0,
+        transitions => [['UNCONFIRMED', 0], ['CONFIRMED', 0], ['REOPENED', 0],
+                        ['VERIFIED', 0]],
+    },
+    {
+        value       => 'VERIFIED',
+        sortkey     => 800,
+        isactive    => 1,
+        isopen      => 0,
+        transitions => [['UNCONFIRMED', 0], ['REOPENED', 0], ['RESOLVED', 0]],
+    },
+    {
+        value       => 'CLOSED',
+        sortkey     => 900,
+        isactive    => 1,
+        isopen      => 0,
+        transitions => [['UNCONFIRMED', 0], ['REOPENED', 0], ['RESOLVED', 0]],
+    },
+);
+
+if ($dbh->selectrow_array("SELECT 1 FROM bug_status WHERE value = 'ASSIGNED'")) {
+    $dbh->do('DELETE FROM bug_status');
+    $dbh->do('DELETE FROM status_workflow');
+
+    print "creating status workflow...\n";
+
+    # One pass to add the status entries.
+    foreach my $status (@statuses) {
+        next if !$status->{value};
+        $dbh->do('INSERT INTO bug_status (value, sortkey, isactive, is_open) VALUES (?, ?, ?, ?)',
+            undef, ( $status->{value}, $status->{sortkey}, $status->{isactive}, $status->{isopen} ));
+    }
+
+    # Another pass to add the transitions.
+    foreach my $status (@statuses) {
+        my $old_id;
+        if ($status->{value}) {
+            my $from_status = new Bugzilla::Status({ name => $status->{value} });
+            $old_id = $from_status->{id};
+        } else {
+            $old_id = undef;
+        }
+
+        foreach my $transition (@{$status->{transitions}}) {
+            my $to_status = new Bugzilla::Status({ name => $transition->[0] });
+
+            $dbh->do('INSERT INTO status_workflow (old_status, new_status, require_comment) VALUES (?, ?, ?)',
+                undef, ( $old_id, $to_status->{id}, $transition->[1] ));
+        }
+    }
+}
+
+##########################################################################
 # Create Bugs
 ##########################################################################
 
 # login to bugzilla
 my $admin_user = Bugzilla::User->check($config->{admin_user_login});
 Bugzilla->set_user($admin_user);
-
-# add to the canconfirm group
-push(@{ $admin_user->{'groups'} }, Bugzilla::Group->new({ name => 'canconfirm' }));
-
-# Create missing status values
-my $field = Bugzilla::Field->new({ name => 'bug_status' });
-foreach my $value (qw(CONFIRMED IN_PROGRESS)) {
-    my $created_value = Bugzilla::Field::Choice->type($field)->create({
-        value   => $value,
-        sortkey => 0,
-        is_open => 1
-    });
-}
 
 my %field_values = (
     'priority'     => 'Highest',
@@ -195,6 +310,7 @@ my %field_values = (
     'product'      => 'TestProduct',
     'op_sys'       => 'Linux',
     'bug_severity' => 'normal',
+    'groups'       => [],
 );
 
 print "creating bugs...\n";
@@ -223,6 +339,9 @@ for my $class (@classifications) {
 ##########################################################################
 # Create Products
 ##########################################################################
+my $default_platform_id = $dbh->selectcol_arrayref("SELECT id FROM rep_platform WHERE value = 'Unspecified'");
+my $default_op_sys_id = $dbh->selectcol_arrayref("SELECT id FROM op_sys WHERE value = 'Unspecified'");
+
 my @products = (
     {   product_name     => 'QA-Selenium-TEST',
         description      => "used by Selenium test.. DON'T DELETE",
@@ -238,6 +357,8 @@ my @products = (
 
             }
         ],
+	default_platform_id => $default_platform_id,
+        default_op_sys_id   => $default_op_sys_id,
     },
 
     {   product_name => 'Another Product',
@@ -263,6 +384,8 @@ my @products = (
 
             },
         ],
+	default_platform_id => $default_platform_id,
+        default_op_sys_id   => $default_op_sys_id,
     },
 
     {   product_name     => 'C2 Forever',
@@ -281,6 +404,8 @@ my @products = (
 
             }
         ],
+        default_platform_id => $default_platform_id,
+        default_op_sys_id   => $default_op_sys_id,
     },
 
     {   product_name     => 'QA Entry Only',
@@ -296,6 +421,8 @@ my @products = (
                 initial_cc       => [],
             }
         ],
+        default_platform_id => $default_platform_id,
+        default_op_sys_id   => $default_op_sys_id,
     },
 
     {   product_name     => 'QA Search Only',
@@ -311,6 +438,8 @@ my @products = (
                 initial_cc       => [],
             }
         ],
+        default_platform_id => $default_platform_id,
+        default_op_sys_id   => $default_op_sys_id,
     },
 );
 
@@ -323,8 +452,10 @@ for my $product (@products) {
         if ($product->{classification}) {
             $class_id = Bugzilla::Classification->new({ name => $product->{classification} })->id;
         }
-        $dbh->do('INSERT INTO products (name, description, classification_id) VALUES (?, ?, ?)',
-            undef, ( $product->{product_name}, $product->{description}, $class_id ));
+        $dbh->do('INSERT INTO products (name, description, classification_id, default_platform_id, default_op_sys_id) 
+		  VALUES (?, ?, ?, ?, ?)',
+            undef, ( $product->{product_name}, $product->{description}, $class_id,
+                     $new_product->{default_platform_id}, $new_product->{default_op_sys_id} ));
 
         $new_product
             = new Bugzilla::Product( { name => $product->{product_name} } );
@@ -410,6 +541,12 @@ if ( !Bugzilla::Group->new( { name => $group_name } ) ) {
     $dbh->do('INSERT INTO groups (name, description, isbuggroup, isactive)
               VALUES (?, ?, 1, 1)', undef, ( $group_name, $group_desc ) );
 }
+
+# BMO 'editbugs' is also a member of 'canconfirm'
+my $editbugs   = Bugzilla::Group->new({ name => 'editbugs' });
+my $canconfirm = Bugzilla::Group->new({ name => 'canconfirm' });
+$dbh->do('INSERT INTO group_group_map VALUES (?, ?, 0)',
+         undef, $editbugs->id, $canconfirm->id);
 
 ##########################################################################
 # Add Users to Groups
@@ -613,7 +750,7 @@ my $attachment_contents;
 { local $/; $attachment_contents = <$attachment_fh>; }
 close($attachment_fh);
 foreach my $alias (qw(public_bug private_bug)) {
-    my $bug = new Bugzilla::Bug($alias);
+    my $bug = Bugzilla::Bug->new($alias);
     foreach my $is_private (0, 1) {
         Bugzilla::Attachment->create({
             bug  => $bug,
@@ -651,5 +788,19 @@ foreach my $kw (@keywords) {
     next if new Bugzilla::Keyword({ name => $kw->{name} });
     Bugzilla::Keyword->create($kw);
 }
+
+############################
+# Install the QA extension #
+############################
+
+print "copying the QA extension...\n";
+my $output = `cp -R ../extensions/QA $conf_path/extensions/.`;
+print $output if $output;
+
+my $cwd = cwd();
+chdir($conf_path);
+$output = `perl contrib/fixperms.pl`;
+print $output if $output;
+chdir($cwd);
 
 print "installation and configuration complete!\n";

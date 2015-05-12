@@ -48,15 +48,12 @@ sub bz_log_in {
     my $call = $self->bz_call_success(
         'User.login', { login => $username, password => $password });
     cmp_ok($call->result->{id}, 'gt', 0, $self->TYPE . ": Logged in as $user");
-
-    # Save the cookies in the cookie file
-    $self->transport->cookie_jar->extract_cookies(
-        $self->transport->http_response);
-    $self->transport->cookie_jar->save;
+    $self->{_bz_credentials}->{token} = $call->result->{token};
 }
 
 sub bz_call_success {
-    my ($self, $method, $args, $test_name) = @_;
+    my ($self, $method, $orig_args, $test_name) = @_;
+    my $args = $orig_args ? dclone($orig_args) : {};
 
     if ($self->bz_get_mode and $method eq 'User.logout') {
         $self->_bz_clear_credentials();
@@ -67,7 +64,11 @@ sub bz_call_success {
     # Under XMLRPC::Lite, if we pass undef as the second argument,
     # it sends a single param <value />, which shows up as an
     # empty string on the Bugzilla side.
-    if ($args) {
+    if ($self->{_bz_credentials}->{token}) {
+        $args->{Bugzilla_token} = $self->{_bz_credentials}->{token};
+    }
+
+    if (scalar keys %$args) {
         $call = $self->call($method, $args);
     }
     else {
@@ -77,11 +78,21 @@ sub bz_call_success {
     $self->_handle_undef_response($test_name) if !$call;
     ok(!$call->fault, $self->TYPE . ": $test_name")
         or diag($call->faultstring);
+
+    if ($method eq 'User.logout') {
+        delete $self->{_bz_credentials}->{token};
+    }
     return $call;
 }
 
 sub bz_call_fail {
-    my ($self, $method, $args, $faultstring, $test_name) = @_;
+    my ($self, $method, $orig_args, $faultstring, $test_name) = @_;
+    my $args = $orig_args ? dclone($orig_args) : {};
+
+    if ($self->{_bz_credentials}->{token}) {
+        $args->{Bugzilla_token} = $self->{_bz_credentials}->{token};
+    }
+
     $test_name ||= "$method failed (as intended)";
     my $call = $self->call($method, $args);
     $self->_handle_undef_response($test_name) if !$call;
@@ -134,12 +145,12 @@ sub bz_create_test_bugs {
     my @summary_strings = _string_array(3);
 
     my $public_bug = create_bug_fields($config);
-    $public_bug->{alias} = random_string(20);
+    $public_bug->{alias} = random_string(40);
     $public_bug->{whiteboard} = join(' ', @whiteboard_strings);
     $public_bug->{summary} = join(' ', @summary_strings);
 
     my $private_bug = dclone($public_bug);
-    $private_bug->{alias} = random_string(20);
+    $private_bug->{alias} = random_string(40);
     if ($second_private) {
         $private_bug->{product}   = 'QA-Selenium-TEST';
         $private_bug->{component} = 'QA-Selenium-TEST';

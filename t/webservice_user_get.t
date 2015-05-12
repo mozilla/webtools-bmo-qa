@@ -7,8 +7,8 @@ use warnings;
 use lib qw(lib);
 use QA::Util;
 use QA::Tests qw(PRIVATE_BUG_USER);
-use Test::More tests => 228;
-my ($config, @clients) = get_rpc_clients();
+use Test::More tests => 330;
+our ($config, @clients) = get_rpc_clients();
 
 my $get_user = $config->{'unprivileged_user_login'};
 my $canconfirm_user = $config->{'canconfirm_user_login'};
@@ -84,20 +84,31 @@ my @tests = (
       error => 'The group you specified, QA-Selenium-TEST, is not valid here',
     },
     { user => 'editbugs',
-      args => { names => [$get_user, $priv_user], groups => ['canconfirm', 'editbugs'] },
+      args => { names => [$get_user, $priv_user], groups => ['Master', 'editbugs'] },
       test => 'Limiting the return value to some groups you do not belong to fails',
-      error => 'The group you specified, canconfirm, is not valid here',
+      error => 'The group you specified, Master, is not valid here',
     },
     { user => 'admin',
       args => { names => [$canconfirm_user], groups => ['canconfirm', 'editbugs'] },
       test => 'Limiting the return value to groups you belong to',
     },
-    # XXX We have no way of getting group_ids from the WebService, so
-    # we can't really test that they work.
 
+    # groups returned
     { user => 'admin',
       args => { names => [$get_user] },
       test => 'Admin can get user',
+    },
+    { user => 'admin',
+      args => { names => [$canconfirm_user] },
+      test => 'Admin can get user',
+    },
+    { user => 'canconfirm',
+      args => { names => [$canconfirm_user] },
+      test => 'Privileged user can get himself',
+    },
+    { user => 'editbugs',
+      args => { names => [$canconfirm_user] },
+      test => 'Privileged user can get another user',
     },
 );
 
@@ -107,13 +118,14 @@ sub post_success {
     my $result = $call->result;
     is(scalar @{ $result->{users} }, 1, "Got exactly one user");
     my $item = $result->{users}->[0];
+    my $user = $t->{user} || '';
 
-    if ($t->{user} && $t->{user} eq 'admin') {
+    if ($user eq 'admin') {
         ok(exists $item->{email} && exists $item->{can_login}
            && exists $item->{email_enabled} && exists $item->{login_denied_text},
            'Admin correctly gets all user fields');
     }
-    elsif ($t->{user}) {
+    elsif ($user) {
         ok(exists $item->{email} && exists $item->{can_login},
            'Logged-in user correctly gets email and can_login');
         ok(!exists $item->{email_enabled} 
@@ -124,6 +136,35 @@ sub post_success {
         my @item_keys = sort keys %$item;
         is_deeply(\@item_keys, ['id', 'name', 'real_name'],
             'Only id, name, and real_name are returned to logged-out users');
+        return;
+    }
+
+    my $username = $config->{"${user}_user_login"};
+    # XXX We have no way to create a saved search or a saved report from
+    # the WebService, so we cannot test that the correct data is returned
+    # if the user is accessing his own account.
+    if ($username eq $item->{name}) {
+        ok(exists $item->{saved_searches},
+           'Users can get the list of saved searches and reports for their own account');
+    }
+    else {
+        ok(!exists $item->{saved_searches},
+           "Users cannot get the list of saved searches and reports from someone else's acccount");
+    }
+
+    my @groups = map { $_->{name} } @{$item->{groups}};
+    # Admins can see all groups a user belongs to (assuming they inherited
+    # membership for all groups). Same for a user querying his own account.
+    if ($username eq $item->{name} || $user eq 'admin') {
+        if ($username eq $get_user) {
+            ok(!scalar @groups, "The unprivileged user doesn't belong to any group");
+        }
+        elsif ($username eq $canconfirm_user) {
+            ok(grep($_ eq 'canconfirm', @groups), "Group 'canconfirm' returned");
+        }
+    }
+    else {
+        ok(!scalar @groups, "No groups are visible to users without bless privs");
     }
 }
 

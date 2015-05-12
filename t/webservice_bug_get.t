@@ -1,5 +1,5 @@
 ###########################################
-# Test for xmlrpc call to Bug.get_bugs()  #
+# Test for xmlrpc call to Bug.get()       #
 ###########################################
 
 use strict;
@@ -30,7 +30,8 @@ $xmlrpc->bz_call_success('Bug.update', {
     dupe_of => $public_id,
     is_creator_accessible => 0,
     keywords => { set => ['test-keyword-1', 'test-keyword-2'] },
-    see_also => { add => ["${base_url}show_bug.cgi?id=$public_id"] },
+    see_also => { add => ["${base_url}show_bug.cgi?id=$public_id",
+                          "http://landfill.bugzilla.org/show_bug.cgi?id=123456"] },
     cf_qa_status => ['in progress', 'verified'],
     cf_single_select => 'two',
 }, 'Update the private bug');
@@ -44,7 +45,8 @@ $private_bug->{resolution} = 'DUPLICATE';
 $private_bug->{is_creator_accessible} = 0;
 $private_bug->{is_cc_accessible} = 1;
 $private_bug->{keywords} = ['test-keyword-1', 'test-keyword-2'];
-$private_bug->{see_also} = ["${base_url}show_bug.cgi?id=$public_id"];
+$private_bug->{see_also} = ["${base_url}show_bug.cgi?id=$public_id",
+                            "http://landfill.bugzilla.org/show_bug.cgi?id=123456"];
 $private_bug->{cf_qa_status} = ['in progress', 'verified'];
 $private_bug->{cf_single_select} = 'two';
 
@@ -55,6 +57,7 @@ $public_bug->{is_open} = 1;
 $public_bug->{is_creator_accessible} = 1;
 $public_bug->{is_cc_accessible} = 1;
 $public_bug->{keywords} = [];
+# Local Bugzilla bugs are automatically updated.
 $public_bug->{see_also} = ["${base_url}show_bug.cgi?id=$private_id"];
 $public_bug->{cf_qa_status} = [];
 $public_bug->{cf_single_select} = '---';
@@ -86,10 +89,8 @@ sub post_success {
     my $bug = $call->result->{bugs}->[0];
 
     if ($t->{user} && $t->{user} eq 'admin') {
-        ok(exists $bug->{estimated_time} && exists $bug->{remaining_time}
-           && exists $bug->{deadline},
+        ok(exists $bug->{estimated_time} && exists $bug->{remaining_time},
            'Admin correctly gets time-tracking fields');
-
         is($bug->{deadline}, '2038-01-01', 'deadline is correct');
         cmp_ok($bug->{estimated_time}, '==', '10.0', 
                'estimated_time is correct');
@@ -97,8 +98,7 @@ sub post_success {
                'remaining_time is correct');
     }
     else {
-        ok(!exists $bug->{estimated_time} && !exists $bug->{remaining_time}
-           && !exists $bug->{deadline},
+        ok(!exists $bug->{estimated_time} && !exists $bug->{remaining_time},
            'Time-tracking fields are not returned to non-privileged users');
     }
 

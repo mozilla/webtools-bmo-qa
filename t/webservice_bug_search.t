@@ -57,7 +57,7 @@ push(@tests, (
     { args => { reporter => $config->{editbugs_user_login} },
       test => 'Search by reporter',
     },
-    { args => { resolution => '' },
+    { args => { resolution => '---' },
       test => 'Search for empty resolution',
     },
     { args => { resolution => 'NO_SUCH_RESOLUTION' },

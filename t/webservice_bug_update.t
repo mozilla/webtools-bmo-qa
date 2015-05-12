@@ -5,7 +5,7 @@ use Data::Dumper;
 use QA::Util;
 use QA::Tests qw(PRIVATE_BUG_USER STANDARD_BUG_TESTS);
 use Storable qw(dclone);
-use Test::More tests => 969;
+use Test::More tests => 927;
 
 use constant NONEXISTANT_BUG => 12_000_000;
 
@@ -23,7 +23,7 @@ sub get_tests {
 
     my ($public_bug, $second_bug) = $rpc->bz_create_test_bugs();
     my ($public_id, $second_id) = ($public_bug->{id}, $second_bug->{id});
-    
+
     my $comment_call = $rpc->bz_call_success(
         'Bug.comments', { ids => [$public_id, $second_id] });
     $public_bug->{comment} =
@@ -51,7 +51,7 @@ sub get_tests {
     return \@tests;
 }
 
-sub valid_values { 
+sub valid_values {
     my ($config, $public_bug, $second_bug) = @_;
 
     my $admin = $config->{'admin_user_login'};
@@ -81,7 +81,7 @@ sub valid_values {
               added => '', removed => $second_id,
               test  => 'set to nothing' },
         ],
-    
+
         cc => [
             { value => { add => [$admin] },
               added => $admin, removed => '',
@@ -93,43 +93,43 @@ sub valid_values {
               test  => "removing user who isn't on the list works",
               no_changes => 1 },
         ],
-    
+
         is_cc_accessible => [
             { value => 0, test => 'set to 0' },
             { value => 1, test => 'set to 1' },
         ],
-        
+
         comment => [
             { value => { body => random_string(100) }, test => 'public' },
             { value => { body => random_string(100), is_private => 1 },
               user  => PRIVATE_BUG_USER, test => 'private' },
         ],
-        
+
         comment_is_private => [
             { value => { $comment_id => 1 },
               user  => PRIVATE_BUG_USER, test => 'make description private' },
             { value => { $comment_id => 0 },
               user  => PRIVATE_BUG_USER, test => 'make description public' },
         ],
-        
+
         component => [
             { value => 'c2' }
         ],
-        
+
         deadline => [
             { value => '2037-01-01' },
             { value => '', removed => '2037-01-01', test => 'remove' },
         ],
-        
+
         dupe_of => [
             { value => $second_id },
         ],
-        
+
         estimated_time => [
             { value => '10.0' },
             { value => '0.0', removed => '10.0', test => 'set to zero' },
         ],
-        
+
         groups => [
             { value => { add => ['Master'] },
               user => 'admin', added => 'Master', test => 'add Master' },
@@ -137,7 +137,7 @@ sub valid_values {
               user => 'admin', added => '', removed => 'Master',
               test => 'remove Master' },
         ],
-        
+
         keywords => [
             { value => { add => ['test-keyword-1'] },
               test => 'add one', added => 'test-keyword-1' },
@@ -153,19 +153,19 @@ sub valid_values {
               test  => 'removing removed keyword does nothing',
               no_changes => 1 },
         ],
-        
+
         op_sys => [
             { value => 'All' },
         ],
-        
+
         platform => [
             { value => 'All' },
         ],
-        
+
         priority => [
             { value => 'Normal' },
         ],
-        
+
         product => [
             { value => 'C2 Forever',
               extra => {
@@ -180,14 +180,14 @@ sub valid_values {
               extra => { component => $public_bug->{component} },
               test  => 'move back to original product' },
         ],
-        
+
         qa_contact => [
             { value => $admin },
             { value => '', test => 'set blank', removed => $admin },
             # Reset to the original so that reset_qa_contact can also be tested.
             { value => $public_bug->{qa_contact} },
         ],
-        
+
         remaining_time => [
             { value => '1000.50' },
             { value => 0 },
@@ -197,18 +197,17 @@ sub valid_values {
             { value => 1, field => 'assigned_to',
               added => $config->{permanent_user} },
         ],
-        
+
         reset_qa_contact => [
             { value => 1, field => 'qa_contact', added => '' },
         ],
-        
+
         resolution => [
             { value => 'FIXED', extra => { status => 'RESOLVED' },
-              test => 'to RESOLVED FIXED', 
-              user => 'permanent' },  # BMO - editbugs/canconfirm required to resolve as FIXED
+              test => 'to RESOLVED FIXED' },
             { value => 'INVALID', test => 'just resolution' },
         ],
-        
+
         see_also => [
             { value => { add => [$bug_uri . $second_id] },
               added => $bug_uri . $second_id, removed => '',
@@ -226,7 +225,7 @@ sub valid_values {
               no_changes => 1,
               test  => 'adding a null to see_also does nothing' },
         ],
-        
+
         status => [
             # At this point, due to previous tests, the status is RESOLVED,
             # so changing to CONFIRMED is our only real option if we want to
@@ -237,27 +236,27 @@ sub valid_values {
         severity => [
             { value => 'critical' },
         ],
-        
+
         summary => [
             { value => random_string(100) },
         ],
-        
+
         target_milestone => [
             { value => 'AnotherMS2' },
         ],
-        
+
         url => [
             { value => 'http://' . random_string(20) . '/' },
         ],
-        
+
         version => [
             { value => 'Another2' },
         ],
-        
+
         whiteboard => [
             { value => random_string(1000) },
         ],
-        
+
         work_time => [
             # XXX: work_time really needs to start showing up in the changes
             # hash.
@@ -300,16 +299,16 @@ sub valid_values_to_tests {
 
 sub invalid_values {
     my ($public_bug, $second_bug) = @_;
-    
+
     my $public_id = $public_bug->{id};
     my $second_id = $second_bug->{id};
-    
+
     my $comment_id = $public_bug->{comment}->{id};
     my $second_comment_id = $second_bug->{comment}->{id};
 
     my %values = (
         alias => [
-            { value => random_string(21), 
+            { value => random_string(41),
               error => 'aliases cannot be longer than',
               test  => 'alias cannot be too long' },
             { value => $second_bug->{alias},
@@ -318,17 +317,11 @@ sub invalid_values {
             { value => 123456,
               error => 'at least one letter',
               test  => 'numeric alias fails' },
-            { value => random_string(6) . ' ' . random_string(6),
-              error => 'contains one or more commas or spaces',
-              test  => 'alias with space fails' },
-            { value => random_string(6) . ',' . random_string(6),
-              error => 'contains one or more commas or spaces',
-              test  => 'alias with comma fails' },
             { value => random_string(20), ids => [$public_id, $second_id],
               error => 'aliases when modifying multiple',
               test  => 'setting alias on multiple bugs fails' },
         ],
-    
+
         assigned_to => [
             { value => random_string(20),
               error => 'There is no user named',
@@ -339,7 +332,7 @@ sub invalid_values {
             # XXX Also check strict_isolation at some point in the future,
             # perhaps.
         ],
-    
+
         blocks => [
             { value => { add => [NONEXISTANT_BUG] },
               error => 'does not exist',
@@ -350,7 +343,7 @@ sub invalid_values {
             # XXX Could use strict_isolation checks at some point.
             # XXX Could use a dependency_loop_multi test.
         ],
-    
+
         cc => [
             { value => { add => [random_string(20)] },
               error => 'There is no user named',
@@ -359,7 +352,7 @@ sub invalid_values {
               error => 'There is no user named',
               test  => 'removing invalid user from cc fails' },
         ],
-        
+
         comment => [
             { value => { body => random_string(100_000) },
               error => 'cannot be longer',
@@ -368,7 +361,7 @@ sub invalid_values {
               error => 'comments or attachments as private',
               test  => 'normal user cannot add private comments' },
         ],
-        
+
         comment_is_private => [
             { value => { $comment_id => 1 },
               error => 'comments or attachments as private',
@@ -378,7 +371,7 @@ sub invalid_values {
               user  => PRIVATE_BUG_USER,
               test  => 'cannot change privacy on a comment on another bug' },
         ],
-        
+
         component => [
             { value => '',
               error => 'you must first choose a component',
@@ -387,7 +380,7 @@ sub invalid_values {
               error => 'There is no component named',
               test  => 'invalid component fails' },
         ],
-        
+
         deadline => [
             { value => random_string(20),
               error => 'is not a legal date',
@@ -395,13 +388,8 @@ sub invalid_values {
             { value => '2037',
               error => 'is not a legal date',
               test  => 'year alone fails in deadline' },
-            # We use PRIVATE_BUG_USER because he can modify the bug, but
-            # can't change time-tracking fields.
-            { value => '2037-01-02', user => PRIVATE_BUG_USER,
-              error => 'only a user with the required permissions',
-              test  => 'non-timetracker can not set deadline' },
         ],
-        
+
         dupe_of => [
             { value => undef,
               error => 'dup_id was not defined',
@@ -413,7 +401,7 @@ sub invalid_values {
               error => 'as a duplicate of itself',
               test  => 'Cannot dup bug to itself' },
         ],
-        
+
         estimated_time => [
             { value => -1,
               error => 'less than the minimum allowable value',
@@ -430,7 +418,7 @@ sub invalid_values {
               error => 'only a user with the required permissions',
               test  => 'non-timetracker can not set estimated_time' },
         ],
-        
+
         groups => [
             { value => { add => ['Master'] },
               error => 'either this group does not exist, or you are not allowed to restrict bugs to this group',
@@ -445,19 +433,19 @@ sub invalid_values {
               error => 'either this group does not exist, or you are not allowed to remove bugs from this group',
               test => 'removing non-existent group fails' },
         ],
-        
+
         keywords => [
             { value => { add => [random_string(20)] },
-              error => 'legal keyword names are listed',
+              error => 'The legal keyword names are listed here',
               test  => 'adding invalid keyword fails' },
             { value => { remove => [random_string(20)] },
-              error => 'legal keyword names are listed',
+              error => 'The legal keyword names are listed here',
               test  => 'removing invalid keyword fails' },
             { value => { set => [random_string(20)] },
-              error => 'legal keyword names are listed',
+              error => 'The legal keyword names are listed here',
               test  => 'setting invalid keyword fails' },
         ],
-        
+
         op_sys => [
             { value => random_string(20),
               error => 'There is no',
@@ -466,14 +454,14 @@ sub invalid_values {
               error => 'You must select/enter',
               test => 'blank op_sys fails' },
         ],
-        
+
         product => [
             { value => random_string(60),
               error => "does not exist or you aren't authorized",
               test  => 'invalid product fails' },
             { value => '',
               error => 'You must select/enter a product',
-              test  => 'moving to blank product fails' },            
+              test  => 'moving to blank product fails' },
             { value => 'TestProduct',
               error => 'There is no component named',
               test  => 'moving products without other fields fails' },
@@ -485,13 +473,13 @@ sub invalid_values {
               error => "does not exist or you aren't authorized",
               test  => 'moving to product where ENTRY is denied fails' },
         ],
-        
+
         qa_contact => [
             { value => random_string(20),
               error => 'There is no user named',
               test  => 'changing qa_contact to invalid user fails' },
         ],
-        
+
         remaining_time => [
             { value => -1,
               error => 'less than the minimum allowable value',
@@ -508,7 +496,7 @@ sub invalid_values {
               error => 'only a user with the required permissions',
               test  => 'non-timetracker can not set remaining_time' },
         ],
-        
+
         # We do all the failing resolution tests on the second bug,
         # because we want to be sure that we're starting from an open
         # status.
@@ -529,7 +517,7 @@ sub invalid_values {
               error => 'A valid resolution is required',
               test => 'blank resolution fails with closed status' },
         ],
-        
+
         see_also => [
             { value => { add => [random_string(20)] },
               error => 'is not a valid bug number nor an alias',
@@ -538,7 +526,7 @@ sub invalid_values {
               error => 'See Also URLs should point to one of',
               test  => 'no show_bug.cgi in see_also URI' },
         ],
-        
+
         status => [
             { value => random_string(20),
               error => 'There is no status named',
@@ -553,7 +541,7 @@ sub invalid_values {
               error => 'You are not allowed to change the bug status from',
               test  => 'invalid transition fails' },
         ],
-        
+
         summary => [
             { value => random_string(300),
               error => 'The text you entered in the Summary field is too long',
@@ -562,7 +550,7 @@ sub invalid_values {
               error => 'You must enter a summary for this bug',
               test  => 'blank summary fails' },
         ],
-        
+
         work_time => [
             { value => 100_000_000,
               error => 'more than the maximum allowable value',
@@ -574,12 +562,12 @@ sub invalid_values {
             # can't change time-tracking fields.
             { value => '10', user => PRIVATE_BUG_USER,
               error => 'only a user with the required permissions',
-              test  => 'non-timetracker can not set work_time' },            
+              test  => 'non-timetracker can not set work_time' },
         ],
     );
 
     $values{depends_on} = $values{blocks};
-    
+
     foreach my $field (qw(platform priority severity target_milestone version))
     {
         my $tests = dclone($values{op_sys});
@@ -638,20 +626,20 @@ sub post_success {
         else {
             _check_changes($bug, $field, $t);
         }
-    }    
+    }
 }
 
 sub _check_changes {
     my ($bug, $field, $t) = @_;
-    
+
     my $changes = $bug->{changes}->{$field};
     ok(defined $changes, "$field was changed")
       or diag Dumper($bug, $t);
-    
+
     my $new_value = $t->{added};
     $new_value = $t->{args}->{$field} if !defined $new_value;
     _test_value($changes->{added}, $new_value, $field, 'added');
-    
+
     if (defined $t->{removed}) {
         _test_value($changes->{removed}, $t->{removed}, $field, 'removed');
     }
@@ -664,7 +652,7 @@ sub _test_value {
     }
     else {
         is($got, $expected, "$field: $type is correct");
-    }    
+    }
 }
 
 sub _check_comment {
@@ -672,7 +660,7 @@ sub _check_comment {
     my $bug_id = $bug->{id};
     my $call = $rpc->bz_call_success('Bug.comments', { ids => [$bug_id] });
     my $comments = $call->result->{bugs}->{$bug_id}->{comments};
-    
+
     if ($field eq 'comment_is_private') {
         my $first_private = $comments->[0]->{is_private};
         my ($expected) = values %{ $t->{args}->{comment_is_private} };
@@ -684,10 +672,10 @@ sub _check_comment {
         my $expected = $t->{args}->{comment}->{body};
         is($last_comment->{text}, $expected, 'comment added correctly');
     }
-    
+
 }
 
 foreach my $rpc ($jsonrpc, $xmlrpc) {
-    $rpc->bz_run_tests(tests => get_tests($config, $rpc), 
+    $rpc->bz_run_tests(tests => get_tests($config, $rpc),
         method => 'Bug.update', post_success => \&post_success);
 }
