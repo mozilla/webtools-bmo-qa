@@ -82,7 +82,7 @@ $sel->open_ok("/$config->{bugzilla_installation}/editusers.cgi");
 $sel->title_is("Authorization Required");
 $error_msg = trim($sel->get_text("error_msg"));
 ok($error_msg =~ /^Sorry, you aren't a member of the 'editusers' group/, "Not a member of the editusers group");
-$sel->click_ok("link=end session");
+$sel->click_ok("link=End sudo session impersonating " . $config->{unprivileged_user_login});
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Sudo session complete");
 $sel->is_text_present_ok("The sudo session has been ended");

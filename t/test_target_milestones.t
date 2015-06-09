@@ -37,7 +37,7 @@ $sel->is_text_present_ok("Target Milestone:");
 $sel->select_ok("target_milestone", "label=TM1");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug $test_bug_1 processed");
+$sel->is_text_present_ok("Changes submitted for bug $test_bug_1");
 
 # Query for bugs with the TM1 milestone.
 
@@ -64,10 +64,10 @@ set_parameters($sel, { "Bug Fields" => {"usetargetmilestone-off" => undef} });
 $sel->click_ok("link=Search");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Search for bugs");
-ok(!$sel->is_text_present("Target:"), "The target milestone field is no longer displayed");
+ok(!$sel->is_text_present("Target Milestone:"), "The target milestone field is no longer displayed");
 
 go_to_bug($sel, $test_bug_1);
-ok(!$sel->is_text_present("Target Milestone:"), "The milestone field is no longer displayed");
+ok(!$sel->is_element_present('//label[@for="target_milestone"]'));
 
 # The existing query must still work despite milestones are off now.
 

@@ -18,15 +18,12 @@ logout($sel);
 # expires after 3 days only and this test can be executed several times per day.
 my $valid_account = 'selenium-' . random_string(10) . '@bugzilla.test';
 
-$sel->click_ok("link=Home");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bugzilla Main Page");
 $sel->is_text_present_ok("Open a New Account");
 $sel->click_ok("link=Open a New Account");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Create a new Bugzilla account");
 $sel->type_ok("login", $valid_account);
-$sel->click_ok("send");
+$sel->click_ok('//input[@value="Create Account"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Request for new user account '$valid_account' submitted");
 $sel->is_text_present_ok("A confirmation email has been sent");
@@ -40,7 +37,7 @@ $sel->click_ok("link=Open a New Account");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Create a new Bugzilla account");
 $sel->type_ok("login", $valid_account);
-$sel->click_ok("send");
+$sel->click_ok('//input[@value="Create Account"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Too Soon For New Token");
 my $error_msg = trim($sel->get_text("error_msg"));
@@ -53,24 +50,30 @@ foreach my $account (@accounts) {
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     $sel->title_is("Create a new Bugzilla account");
     $sel->type_ok("login", $account);
-    $sel->click_ok("send");
+    $sel->click_ok('//input[@value="Create Account"]');
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     $sel->title_is("Account Creation Restricted");
     $sel->is_text_present_ok("User account creation has been restricted.");
 }
 
-# These accounts are illegal.
-@accounts = ('test\bugzilla@bugzilla.test', 'test@bugzilla.org@bugzilla.test');
+# These accounts are illegal and should cause a javascript alert.
+@accounts = qw(
+    test\bugzilla@bugzilla.test
+    testbugzilla.test
+    test@bugzilla
+    test@bugzilla.
+    'test'@bugzilla.test
+    test&test@bugzilla.test
+    [test]@bugzilla.test
+);
 foreach my $account (@accounts) {
     $sel->click_ok("link=New Account");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     $sel->title_is("Create a new Bugzilla account");
     $sel->type_ok("login", $account);
-    $sel->click_ok("send");
-    $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Invalid Email Address");
-    my $error_msg = trim($sel->get_text("error_msg"));
-    ok($error_msg =~ /^The e-mail address you entered (\S+) didn't pass our syntax checking/, "Invalid email address detected");
+    $sel->click_ok('//input[@value="Create Account"]');
+    ok($sel->get_alert() =~ /The e-mail address doesn't pass our syntax checking for a legal email address/,
+        'Invalid email address detected');
 }
 
 # This account already exists.
@@ -78,7 +81,7 @@ $sel->click_ok("link=New Account");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Create a new Bugzilla account");
 $sel->type_ok("login", $config->{admin_user_login});
-$sel->click_ok("send");
+$sel->click_ok('//input[@value="Create Account"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Account Already Exists");
 $error_msg = trim($sel->get_text("error_msg"));

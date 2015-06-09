@@ -45,7 +45,7 @@ $sel->type_ok("comment", "Created by Selenium to test 'musthavemilestoneonaccept
 $sel->click_ok("commit", undef, "Commit bug data to post_bug.cgi");
 $sel->wait_for_page_to_load(WAIT_TIME);
 my $bug1_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
-$sel->title_like(qr/Bug $bug1_id Submitted/, "Bug $bug1_id created");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug1_id created");
 
 # 4th step: edit the bug (test musthavemilestoneonaccept ON).
 
@@ -59,7 +59,7 @@ go_to_bug($sel, $bug1_id);
 $sel->select_ok("target_milestone", "label=2.0", "Select a non-default milestone");
 $sel->click_ok("commit", undef, "Save changes (2nd attempt)");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed", undef, "Changes saved");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 
 # 5th step: create another bug.
 
@@ -72,14 +72,15 @@ $sel->type_ok("comment", "Created by Selenium to test 'musthavemilestoneonaccept
 $sel->click_ok("commit", undef, "Commit bug data to post_bug.cgi");
 $sel->wait_for_page_to_load(WAIT_TIME);
 my $bug2_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
-$sel->title_like(qr/Bug $bug2_id Submitted/, "Bug $bug2_id created");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug2_id created");
 
 # 6th step: edit the bug (test musthavemilestoneonaccept ON).
 
 $sel->select_ok("bug_status", "label=IN_PROGRESS");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug $bug2_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug2_id");
+
 
 # 7th step: test validation methods for milestones.
 
@@ -133,7 +134,7 @@ $sel->title_is("Milestone Deleted");
 # 8th step: make sure the (now deleted) milestone of the bug has fallen back to the default milestone.
 
 $sel->open_ok("/$config->{bugzilla_installation}/show_bug.cgi?id=$bug1_id");
-$sel->title_like(qr/^Bug $bug1_id/);
+$sel->title_like(qr/^$bug1_id/);
 $sel->is_text_present_ok('regexp:Target Milestone:\W+---', undef, "Milestone has fallen back to the default milestone");
 
 # 9th step: file another bug.
@@ -146,7 +147,7 @@ $sel->type_ok("comment", "Created by Selenium to test 'musthavemilestoneonaccept
 $sel->click_ok("commit", undef, "Commit bug data to post_bug.cgi");
 $sel->wait_for_page_to_load(WAIT_TIME);
 my $bug3_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
-$sel->title_like(qr/Bug $bug3_id Submitted/);
+$sel->is_text_present_ok('has been added to the database', "Bug $bug3_id created");
 
 # 10th step: musthavemilestoneonaccept must have no effect as there is
 #            no other milestone available besides the default one.
@@ -154,7 +155,7 @@ $sel->title_like(qr/Bug $bug3_id Submitted/);
 $sel->select_ok("bug_status", "label=IN_PROGRESS");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug $bug3_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug3_id");
 
 # 11th step: turn musthavemilestoneonaccept back to OFF.
 

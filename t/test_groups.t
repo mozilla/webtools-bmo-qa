@@ -52,7 +52,7 @@ $sel->selected_label_is("component", "TestComponent");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
 my $bug1_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
-$sel->title_like(qr/Bug $bug1_id Submitted/, "Bug $bug1_id created");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug1_id created");
 $sel->is_text_present_ok("Test group for Selenium");
 $sel->value_is("group_${group_id}", "on"); # Must be ON
 
@@ -64,9 +64,9 @@ $sel->add_selection_ok("product", "TestProduct");
 $sel->remove_all_selections("bug_status");
 $sel->add_selection_ok("bug_status", "UNCONFIRMED");
 $sel->add_selection_ok("bug_status", "CONFIRMED");
-$sel->select_ok("field0-0-0", "Group");
-$sel->select_ok("type0-0-0", "is equal to");
-$sel->type_ok("value0-0-0", "Selenium-test");
+$sel->select_ok("f1", "Group");
+$sel->select_ok("o1", "is equal to");
+$sel->type_ok("v1", "Selenium-test");
 $sel->click_ok("Search");
 $sel->wait_for_page_to_load(WAIT_TIME);
 $sel->title_is("Bug List");
@@ -109,7 +109,7 @@ ok(!$sel->is_element_present("group_${group_id}"), "Selenium-test checkbox not p
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
 my $bug2_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
-$sel->title_like(qr/Bug $bug2_id Submitted/, "Bug $bug2_id created");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug2_id created");
 
 # Make sure the new bug doesn't appear in the "Selenium bugs" saved search.
 
@@ -181,7 +181,7 @@ ok(!$sel->is_element_present("group_${group_id}"), "Selenium-test checkbox not p
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
 my $bug3_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
-$sel->title_like(qr/Bug $bug3_id Submitted/, "Bug $bug3_id created");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug3_id created");
 
 # Make sure all three bugs are listed as being restricted to the bug group.
 
@@ -219,7 +219,7 @@ ok(!$sel->is_element_present("group_${group_id}"), "Selenium-test checkbox not p
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
 my $bug4_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
-$sel->title_like(qr/Bug $bug4_id Submitted/, "Bug $bug4_id created");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug4_id created");
 
 # The last bug must not be in the list.
 

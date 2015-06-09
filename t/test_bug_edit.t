@@ -46,8 +46,8 @@ $sel->type_ok("short_desc", "Test bug editing");
 $sel->type_ok("comment", "ploc");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug \d+ Submitted/, "Bug created");
 my $bug1_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
+$sel->is_text_present_ok('has been added to the database', "Bug $bug1_id created");
 
 # Now edit field values of the bug you just filed.
 
@@ -61,13 +61,13 @@ $sel->type_ok("comment", "new comment from me :)");
 $sel->select_ok("bug_status", "label=RESOLVED");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 
 # Now move the bug into another product, which has a mandatory group.
 
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^$bug1_id /);
 $sel->select_ok("product", "label=QA-Selenium-TEST");
 $sel->type_ok("comment", "moving to QA-Selenium-TEST");
 $sel->click_ok("commit");
@@ -79,10 +79,10 @@ ok(!$sel->is_editable('//input[@type="checkbox" and @name="groups" and @value="Q
 $sel->is_checked_ok('//input[@type="checkbox" and @name="groups" and @value="QA-Selenium-TEST"]', "QA-Selenium-TEST group is selected");
 $sel->click_ok("change_product");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^$bug1_id /);
 $sel->select_ok("bug_severity", "label=normal");
 $sel->select_ok("priority", "label=High");
 $sel->select_ok("rep_platform", "label=All");
@@ -95,14 +95,14 @@ $sel->click_ok("reporter_accessible");
 $sel->select_ok("bug_status", "label=VERIFIED");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^$bug1_id /);
 $sel->type_ok("comment", "I am the reporter, but I can see the bug anyway as I belong to the mandatory group");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 logout($sel);
 
 # The admin is not in the mandatory group, but he has been CC'ed,
@@ -119,16 +119,16 @@ $sel->type_ok("assigned_to", $config->{admin_user_login});
 $sel->type_ok("comment", "I have editbugs privs. Taking!");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^$bug1_id /);
 $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", $config->{unprivileged_user_login});
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 logout($sel);
 
 # The powerless user can see the restricted bug, as he has been CC'ed.
@@ -147,7 +147,7 @@ $sel->click_ok("cclist_accessible");
 $sel->type_ok("comment", "I am allowed to turn off cclist_accessible despite not being in the mandatory group");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 logout($sel);
 
 # The powerless user cannot see the restricted bug anymore.
@@ -183,7 +183,15 @@ $sel->is_editable_ok('//input[@type="checkbox" and @name="groups" and @value="Ma
 ok(!$sel->is_checked('//input[@type="checkbox" and @name="groups" and @value="Master"]'), "Master group not selected by default");
 $sel->click_ok("change_product");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
+$sel->click_ok("link=bug $bug1_id");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_like(qr/^$bug1_id /);
+$sel->click_ok("cclist_accessible");
+$sel->type_ok("comment", "I am allowed to turn off cclist_accessible despite not being in the mandatory group");
+$sel->click_ok("commit");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 logout($sel);
 
 # The unprivileged user can view the bug again, but cannot
@@ -202,7 +210,7 @@ $sel->add_selection_ok("cc", "label=" . $config->{admin_user_login});
 $sel->click_ok("removecc");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 logout($sel);
 
 # Now let's test the CANEDIT bit.
@@ -223,7 +231,7 @@ go_to_bug($sel, $bug1_id);
 $sel->type_ok("comment", "Do nothing except adding a comment...");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 logout($sel);
 
 # This user is not in the master group, so he cannot comment.
@@ -272,7 +280,7 @@ $sel->title_is("Full Text Bug Listing");
 $sel->is_text_present_ok("Bug $bug1_id");
 $sel->is_text_present_ok("Status: CONFIRMED");
 $sel->is_text_present_ok("Reporter: QA-Selenium-TEST <$config->{QA_Selenium_TEST_user_login}>");
-$sel->is_text_present_ok("Assignee: admin <$config->{admin_user_login}>");
+$sel->is_text_present_ok("Assignee: QA Admin <$config->{admin_user_login}>");
 $sel->is_text_present_ok("Severity: blocker");
 $sel->is_text_present_ok("Priority: Highest");
 $sel->is_text_present_ok("I have no privs, I can only comment");
@@ -289,21 +297,21 @@ $sel->type_ok("short_desc", "New bug from me");
 $sel->type_ok("comment", "I can enter a new bug, but not edit it, right?");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/, "Bug created");
 my $bug2_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
+$sel->is_text_present_ok('has been added to the database', "Bug $bug2_id created");
 
-# Clicking the "Back" button and resubmitting the form again should trigger a warning.
+# Clicking the "Back" button and resubmitting the form again should trigger a suspicous action error.
 
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Enter Bug: TestProduct");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Already filed bug");
-$sel->is_text_present_ok("You already used the form");
-$sel->click_ok("file_bug_again");
+$sel->title_is("Suspicious Action");
+$sel->is_text_present_ok("you have no valid token for the create_bug action");
+$sel->click_ok('//input[@value="Confirm Changes"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/, "Bug created");
+$sel->is_text_present_ok('has been added to the database', 'Bug created');
 $sel->type_ok("comment", "New comment not allowed");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
@@ -320,7 +328,7 @@ $sel->type_ok("assigned_to", $config->{admin_user_login});
 $sel->type_ok("comment", "Taking!");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug2_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug2_id");
 
 # Test mass-change.
 
@@ -341,16 +349,16 @@ $sel->title_is("Bugs processed");
 
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug $bug1_id /);
+$sel->title_like(qr/$bug1_id /);
 $sel->selected_label_is("resolution", "WORKSFORME");
 $sel->select_ok("resolution", "label=INVALID");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug $bug1_id /);
+$sel->title_like(qr/$bug1_id /);
 $sel->selected_label_is("resolution", "INVALID");
 
 $sel->click_ok("link=History");
@@ -364,47 +372,47 @@ $sel->is_text_present_ok("Status CONFIRMED RESOLVED");
 
 # Last step: move bugs to another DB, if the extension is enabled.
 
-if ($config->{test_extensions}) {
-    set_parameters($sel, { "Bug Moving" => {"move-to-url"     => {type => "text", value => 'http://www.foo.com/'},
-                                            "move-to-address" => {type => "text", value => 'import@foo.com'},
-                                            "movers"          => {type => "text", value => $config->{admin_user_login}}
-                                           }
-                         });
-
-    # Mass-move has been removed, see 581690.
-    # Restore these tests once this bug is fixed.
-    # $sel->click_ok("link=My bugs from QA_Selenium");
-    # $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    # $sel->title_is("Bug List: My bugs from QA_Selenium");
-    # $sel->is_text_present_ok("2 bugs found");
-    # $sel->click_ok("link=Change Several Bugs at Once");
-    # $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    # $sel->title_is("Bug List");
-    # $sel->click_ok("check_all");
-    # $sel->type_ok("comment", "-> moved");
-    # $sel->click_ok('oldbugmove');
-    # $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    # $sel->title_is("Bugs processed");
-    # $sel->is_text_present_ok("Bug $bug1_id has been moved to another database");
-    # $sel->is_text_present_ok("Bug $bug2_id has been moved to another database");
-    # $sel->click_ok("link=Bug $bug2_id");
-    # $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    # $sel->title_like(qr/^Bug $bug2_id/);
-    # $sel->selected_label_is("resolution", "MOVED");
-
-    go_to_bug($sel, $bug2_id);
-    $sel->click_ok('oldbugmove');
-    $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Bug $bug2_id processed");
-    $sel->click_ok("link=bug $bug2_id");
-    $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_like(qr/Bug $bug2_id /);
-    $sel->selected_label_is("resolution", "MOVED");
-    $sel->is_text_present_ok("Bug moved to http://www.foo.com/.");
-
-    # Disable bug moving again.
-    set_parameters($sel, { "Bug Moving" => {"movers" => {type => "text", value => ""}} });
-}
+# if ($config->{test_extensions}) {
+#     set_parameters($sel, { "Bug Moving" => {"move-to-url"     => {type => "text", value => 'http://www.foo.com/'},
+#                                             "move-to-address" => {type => "text", value => 'import@foo.com'},
+#                                             "movers"          => {type => "text", value => $config->{admin_user_login}}
+#                                            }
+#                          });
+#
+#     # Mass-move has been removed, see 581690.
+#     # Restore these tests once this bug is fixed.
+#     # $sel->click_ok("link=My bugs from QA_Selenium");
+#     # $sel->wait_for_page_to_load_ok(WAIT_TIME);
+#     # $sel->title_is("Bug List: My bugs from QA_Selenium");
+#     # $sel->is_text_present_ok("2 bugs found");
+#     # $sel->click_ok("link=Change Several Bugs at Once");
+#     # $sel->wait_for_page_to_load_ok(WAIT_TIME);
+#     # $sel->title_is("Bug List");
+#     # $sel->click_ok("check_all");
+#     # $sel->type_ok("comment", "-> moved");
+#     # $sel->click_ok('oldbugmove');
+#     # $sel->wait_for_page_to_load_ok(WAIT_TIME);
+#     # $sel->title_is("Bugs processed");
+#     # $sel->is_text_present_ok("Bug $bug1_id has been moved to another database");
+#     # $sel->is_text_present_ok("Bug $bug2_id has been moved to another database");
+#     # $sel->click_ok("link=Bug $bug2_id");
+#     # $sel->wait_for_page_to_load_ok(WAIT_TIME);
+#     # $sel->title_like(qr/^$bug2_id/);
+#     # $sel->selected_label_is("resolution", "MOVED");
+#
+#     go_to_bug($sel, $bug2_id);
+#     $sel->click_ok('oldbugmove');
+#     $sel->wait_for_page_to_load_ok(WAIT_TIME);
+#     $sel->is_text_present_ok("Changes submitted for bug $bug2_id");
+#     $sel->click_ok("link=bug $bug2_id");
+#     $sel->wait_for_page_to_load_ok(WAIT_TIME);
+#     $sel->title_like(qr/$bug2_id /);
+#     $sel->selected_label_is("resolution", "MOVED");
+#     $sel->is_text_present_ok("Bug moved to http://www.foo.com/.");
+#
+#     # Disable bug moving again.
+#     set_parameters($sel, { "Bug Moving" => {"movers" => {type => "text", value => ""}} });
+# }
 
 # Make sure token checks are working correctly for single bug editing and mass change,
 # first with no token, then with an invalid token.
@@ -417,10 +425,10 @@ foreach my $params (["no_token_single_bug", ""], ["invalid_token_single_bug", "&
     $sel->is_text_present_ok($token ? "an invalid token" : "web browser directly");
     $sel->click_ok("confirm");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Bug $bug1_id processed");
+    $sel->is_text_present_ok("Changes submitted for bug $bug1_id");
     $sel->click_ok("link=bug $bug1_id");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_like(qr/^Bug $bug1_id /);
+    $sel->title_like(qr/^$bug1_id /);
     $sel->is_text_present_ok($comment);
 }
 
@@ -436,7 +444,7 @@ foreach my $params (["no_token_mass_change", ""], ["invalid_token_mass_change", 
     foreach my $bug_id ($bug1_id, $bug2_id) {
         $sel->click_ok("link=bug $bug_id");
         $sel->wait_for_page_to_load_ok(WAIT_TIME);
-        $sel->title_like(qr/^Bug $bug_id /);
+        $sel->title_like(qr/^$bug_id /);
         $sel->is_text_present_ok($comment);
         next if $bug_id == $bug2_id;
         $sel->go_back_ok();

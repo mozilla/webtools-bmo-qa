@@ -52,7 +52,9 @@ if ($config->{test_extensions}) {
     $sel->type_ok("votestoconfirm", "10");
 }
 $sel->type_ok("version", "0.1a");
-$sel->click_ok("//input[\@value='Add']");
+$sel->select_ok("default_op_sys_id", "Unspecified");
+$sel->select_ok("default_platform_id", "Unspecified");
+$sel->click_ok('//input[@type="submit" and @value="Add"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $text = trim($sel->get_text("message"));
 ok($text =~ /You will need to add at least one component before anyone can enter bugs against this product/,
@@ -63,6 +65,9 @@ $sel->title_is("Add component to the Kill me! product");
 $sel->type_ok("component", "first comp");
 $sel->type_ok("description", "comp 1");
 $sel->type_ok("initialowner", $admin_user_login);
+$sel->uncheck_ok("watch_user_auto");
+$sel->type_ok("watch_user", "first-comp\@kill-me.bugs");
+$sel->check_ok("watch_user_auto");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Component Created");
@@ -77,6 +82,9 @@ $sel->title_is("Add component to the Kill me! product");
 $sel->type_ok("component", "first comp");
 $sel->type_ok("description", "comp 2");
 $sel->type_ok("initialowner", $admin_user_login);
+$sel->uncheck_ok("watch_user_auto");
+$sel->type_ok("watch_user", "first-comp\@kill-me.bugs");
+$sel->check_ok("watch_user_auto");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Component Already Exists");
@@ -89,6 +97,9 @@ $sel->type_ok("component", "second comp");
 # FIXME - Re-enter the default assignee (regression due to bug 577574)
 $sel->type_ok("initialowner", $admin_user_login);
 $sel->type_ok("initialcc", $permanent_user);
+$sel->uncheck_ok("watch_user_auto");
+$sel->type_ok("watch_user", "second-comp\@kill-me.bugs");
+$sel->check_ok("watch_user_auto");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Component Created");
@@ -154,7 +165,7 @@ $sel->type_ok("short_desc", "test create/edit product properties");
 $sel->type_ok("comment", "this bug will soon be dead");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug \d+ Submitted/);
+$sel->is_text_present_ok('has been added to the database', 'Bug created');
 my $bug1_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
 my @cc_list = $sel->get_select_options("cc");
 ok(grep($_ eq $unprivileged_user_login, @cc_list), "$unprivileged_user_login correctly added to the CC list");
@@ -168,7 +179,7 @@ $sel->type_ok("short_desc", "check default CC list");
 $sel->type_ok("comment", "is the CC list populated correctly?");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug \d+ Submitted/);
+$sel->is_text_present_ok('has been added to the database', 'Bug created');
 @cc_list = $sel->get_select_options("cc");
 ok(grep($_ eq $permanent_user, @cc_list), "$permanent_user in the CC list for 'second comp' by default");
 
@@ -185,7 +196,7 @@ if ($config->{test_extensions}) {
     $sel->type_ok("maxvotesperbug", 5);
     $sel->type_ok("votestoconfirm", "0");
 }
-$sel->click_ok("submit");
+$sel->click_ok('//input[@type="submit" and @value="Save Changes"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Updating Product 'Kill me nicely'");
 $sel->is_text_present_ok("Updated product name from 'Kill me!' to 'Kill me nicely'");
@@ -207,7 +218,7 @@ if ($config->{test_extensions}) {
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     $sel->title_is("Edit Product 'Kill me nicely'", "Display properties of Kill me nicely");
     $sel->type_ok("votestoconfirm", 2);
-    $sel->click_ok("submit");
+    $sel->click_ok('//input[@type="submit" and @value="Save Changes"]');
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     $sel->title_is("Updating Product 'Kill me nicely'");
     $sel->is_text_present_ok("Updated number of votes needed to confirm a bug");
@@ -224,14 +235,14 @@ if ($config->{test_extensions}) {
 
     edit_product($sel, "Kill me nicely");
     $sel->type_ok("votestoconfirm", 1);
-    $sel->click_ok("submit");
+    $sel->click_ok('//input[@type="submit" and @value="Save Changes"]');
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     $sel->title_is("Updating Product 'Kill me nicely'");
     $sel->is_text_present_ok("Updated number of votes needed to confirm a bug");
     $text = trim($sel->get_text("bugzilla-body"));
     ok($text =~ /Bug $bug1_id confirmed by number of votes/, "Bug $bug1_id is confirmed by popular votes");
 }
- 
+
 # Edit the bug.
 
 go_to_bug($sel, $bug1_id);
@@ -241,10 +252,10 @@ $sel->select_ok("target_milestone", "label=pre-0.1");
 $sel->select_ok("component", "label=second comp");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug $bug1_id /);
+$sel->title_like(qr/$bug1_id /);
 @cc_list = $sel->get_select_options("cc");
 ok(grep($_ eq $permanent_user, @cc_list), "User $permanent_user automatically added to the CC list");
 

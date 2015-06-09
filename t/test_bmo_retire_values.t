@@ -25,8 +25,8 @@ $sel->type_ok("short_desc", "testing testComponent");
 $sel->type_ok("comment", "testing");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug \d+ Submitted/);
 my $clean_bug_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
+$sel->is_text_present_ok('has been added to the database', "Bug $clean_bug_id created");
 
 #
 # component
@@ -58,7 +58,10 @@ $sel->title_is("Add component to the TestProduct product");
 $sel->type_ok("component", "TempComponent");
 $sel->type_ok("description", "Temp component");
 $sel->type_ok("initialowner", $admin_user_login);
-$sel->click_ok("create");
+$sel->uncheck_ok("watch_user_auto");
+$sel->type_ok("watch_user", 'tempcomponent@testproduct.bugs');
+$sel->check_ok("watch_user_auto");
+$sel->click_ok('//input[@type="submit" and @value="Add"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Component Created");
 
@@ -70,8 +73,8 @@ $sel->type_ok("short_desc", "testing tempComponent");
 $sel->type_ok("comment", "testing");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug \d+ Submitted/);
 $bug_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug_id created");
 
 # disable TestProduct:TestComponent for bug entry
 
@@ -103,7 +106,7 @@ $sel->selected_label_is("component", 'TempComponent');
 # update
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug_id");
 $sel->click_ok("link=bug $bug_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 # make sure the component is still tempcomponent
@@ -113,14 +116,14 @@ ok($sel->get_selected_labels("component"), 'TempComponent');
 
 file_bug_in_product($sel, "TestProduct");
 ok(!$sel->is_element_present(
-    q#//select[@id='component']/option[@value='TempComponent']#), 
+    q#//select[@id='component']/option[@value='TempComponent']#),
     'TempComponent is missing from create');
 
 # try changing compoent of existing bug to TempComponent
 
 go_to_bug($sel, $clean_bug_id);
 ok(!$sel->is_element_present(
-    q#//select[@id='component']/option[@value='TempComponent']#), 
+    q#//select[@id='component']/option[@value='TempComponent']#),
     'TempComponent is missing from update');
 
 # delete TempComponent
@@ -182,8 +185,8 @@ $sel->type_ok("short_desc", "testing tempVersion");
 $sel->type_ok("comment", "testing");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug \d+ Submitted/);
 $bug_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug_id created");
 
 # disable new version for bug entry
 
@@ -215,7 +218,7 @@ $sel->selected_label_is("version", 'TempVersion');
 # update
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug_id");
 $sel->click_ok("link=bug $bug_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 # make sure the version is still tempversion
@@ -224,20 +227,20 @@ $sel->selected_label_is("version", 'TempVersion');
 $sel->select_ok("version", "label=unspecified");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug_id");
 
 # try creating new bug with new version
 
 file_bug_in_product($sel, "TestProduct");
 ok(!$sel->is_element_present(
-    q#//select[@id='version']/option[@value='TempVersion']#), 
+    q#//select[@id='version']/option[@value='TempVersion']#),
     'TempVersion is missing from create');
 
 # try changing existing bug to new version
 
 go_to_bug($sel, $clean_bug_id);
 ok(!$sel->is_element_present(
-    q#//select[@id='version']/option[@value='TempVersion']#), 
+    q#//select[@id='version']/option[@value='TempVersion']#),
     'TempVersion is missing from update');
 
 # delete new version
@@ -302,8 +305,8 @@ $sel->type_ok("short_desc", "testing tempMilestone");
 $sel->type_ok("comment", "testing");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug \d+ Submitted/);
 $bug_id = $sel->get_value("//input[\@name='id' and \@type='hidden']");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug_id created");
 
 # disable milestone for bug entry
 
@@ -335,7 +338,7 @@ $sel->selected_label_is("target_milestone", 'TempMilestone');
 # update
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug_id");
 $sel->click_ok("link=bug $bug_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 # make sure the milestone is still tempmilestone
@@ -345,14 +348,14 @@ $sel->selected_label_is("target_milestone", 'TempMilestone');
 
 file_bug_in_product($sel, "TestProduct");
 ok(!$sel->is_element_present(
-    q#//select[@id='target_milestone']/option[@value='TempMilestone']#), 
+    q#//select[@id='target_milestone']/option[@value='TempMilestone']#),
     'TempMilestone is missing from create');
 
 # try changing existing bug to milestone
 
 go_to_bug($sel, $clean_bug_id);
 ok(!$sel->is_element_present(
-    q#//select[@id='target_milestone']/option[@value='TempMilestone']#), 
+    q#//select[@id='target_milestone']/option[@value='TempMilestone']#),
     'TempMilestone is missing from update');
 
 # delete milestone

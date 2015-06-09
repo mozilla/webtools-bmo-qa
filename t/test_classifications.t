@@ -64,8 +64,8 @@ $sel->type_ok("short_desc", "Bug in classification cone");
 $sel->type_ok("comment", "Created by Selenium with classifications turned on");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/, "Bug created");
 my $bug1_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
+$sel->is_text_present_ok('has been added to the database', "Bug $bug1_id created");
 
 # Rename 'cone' to 'Unclassified', which must be rejected as it already exists,
 # then to 'ctwo', which is not yet in use. Should work fine, even with products
@@ -93,7 +93,7 @@ $sel->title_is("Classification Updated");
 # The classification the bug belongs to is no longer displayed since bug 452733.
 # Keeping the code here in case it comes back in a future release. :)
 # go_to_bug($sel, $bug1_id);
-# $sel->is_text_present('[ctwo]');
+# $sel->is_text_present_ok('[ctwo]');
 
 # Now try to delete the 'ctwo' classification. It should fail as there are
 # products in it.

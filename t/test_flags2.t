@@ -138,31 +138,31 @@ my $aflagtype2_id = $1;
 # We are done with the admin tasks. Now play with flags in bugs.
 
 file_bug_in_product($sel, 'TestProduct');
+$sel->click_ok('//input[@value="Set bug flags"]');
 $sel->select_ok("flag_type-$flagtype1_id", "label=+");
 $sel->type_ok("short_desc", "The selenium flag should be kept on product change");
 $sel->type_ok("comment", "pom");
 $sel->click_ok('//input[@value="Add an attachment"]');
 $sel->type_ok("data", $config->{attachment_file});
 $sel->type_ok("description", "small patch");
-$sel->click_ok("ispatch");
 $sel->value_is("ispatch", "on");
 ok(!$sel->is_element_present("flag_type-$aflagtype1_id"), "Flag type $aflagtype1_id not available in TestProduct");
 $sel->select_ok("flag_type-$aflagtype2_id", "label=-");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/, "Bug created");
+$sel->is_text_present_ok('has been added to the database', 'Bug created');
 
 # Store the bug and flag IDs.
 
 my $bug1_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 $sel->click_ok("link=Bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
-$sel->is_text_present_ok("$config->{admin_user_username}: selenium");
+$sel->title_like(qr/^$bug1_id /);
+$sel->is_text_present_ok("$config->{admin_user_nick}: selenium");
 my $flag1_id = $sel->get_attribute('//select[@title="Available in TestProduct and Another Product/c1"]@id');
 $flag1_id =~ s/flag-//;
 $sel->selected_label_is("flag-$flag1_id", "+");
-$sel->is_text_present_ok("$config->{admin_user_username}: selenium_review-");
+$sel->is_text_present_ok("$config->{admin_user_nick}: selenium_review-");
 
 # Now move the bug into the 'Another Product' product.
 # Both the bug and attachment flags should survive.
@@ -175,12 +175,12 @@ $sel->title_is("Verify New Product Details...");
 $sel->select_ok("component", "label=c1");
 $sel->click_ok("change_product");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^$bug1_id /);
 $sel->selected_label_is("flag-$flag1_id", "+");
-$sel->is_text_present_ok("$config->{admin_user_username}: selenium_review-");
+$sel->is_text_present_ok("$config->{admin_user_nick}: selenium_review-");
 
 # Now moving the bug into the c2 component. The bug flag
 # won't survive, but the attachment flag should.
@@ -189,18 +189,19 @@ $sel->type_ok("comment", "Moving to c2. The selenium flag will be deleted.");
 $sel->select_ok("component", "label=c2");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^$bug1_id /);
 ok(!$sel->is_element_present("flag-$flag1_id"), "The selenium bug flag didn't survive");
 ok(!$sel->is_element_present("flag_type-$flagtype1_id"), "The selenium flag type doesn't exist");
-$sel->is_text_present_ok("$config->{admin_user_username}: selenium_review-");
+$sel->is_text_present_ok("$config->{admin_user_nick}: selenium_review-");
 
 # File a bug in 'Another Product / c2' and assign it
 # to a powerless user, so that he can move it later.
 
 file_bug_in_product($sel, 'Another Product');
+$sel->click_ok('//input[@value="Set bug flags"]');
 $sel->select_ok("component", "label=c2");
 $sel->type_ok("assigned_to", $config->{unprivileged_user_login});
 ok(!$sel->is_editable("flag_type-$flagtype1_id"), "The selenium bug flag type is displayed but not selectable");
@@ -211,15 +212,15 @@ $sel->type_ok("short_desc", "Create a new selenium flag for c2");
 $sel->type_ok("comment", ".");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/);
+$sel->is_text_present_ok('has been added to the database', 'Bug created');
 
 # Store the bug and flag IDs.
 
 my $bug2_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 $sel->click_ok("link=Bug $bug2_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug2_id /);
-$sel->is_text_present_ok("$config->{admin_user_username}: selenium");
+$sel->title_like(qr/^$bug2_id /);
+$sel->is_text_present_ok("$config->{admin_user_nick}: selenium");
 my $flag2_id = $sel->get_attribute('//select[@title="Available in TestProduct and Another Product/c1"]@id');
 $flag2_id =~ s/flag-//;
 $sel->selected_label_is("flag-$flag2_id", '?');
@@ -267,14 +268,13 @@ my $flagtype2_id = $1;
 
 go_to_bug($sel, $bug2_id);
 $sel->select_ok("component", "label=c2");
-$sel->click_ok("set_default_assignee");
 $sel->type_ok("comment", "The selenium flag should be preserved.");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug2_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug2_id");
 $sel->click_ok("link=bug $bug2_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug2_id /);
+$sel->title_like(qr/^$bug2_id /);
 $sel->selected_label_is("flag-$flag2_id", '?');
 ok(!$sel->is_element_present("flag_type-$flagtype1_id"), "Flag type not available in c2");
 $sel->is_element_present_ok("flag_type-$flagtype2_id");
@@ -287,10 +287,10 @@ go_to_bug($sel, $bug2_id);
 $sel->select_ok("flag-$flag2_id", "label=+");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug2_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug2_id");
 $sel->click_ok("link=bug $bug2_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug2_id /);
+$sel->title_like(qr/^$bug2_id /);
 $sel->selected_label_is("flag-$flag2_id", "+");
 
 # But moving the bug into TestProduct will delete the flag
@@ -303,10 +303,10 @@ $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Verify New Product Details...");
 $sel->click_ok("change_product");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug2_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug2_id");
 $sel->click_ok("link=bug $bug2_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug2_id /);
+$sel->title_like(qr/^$bug2_id /);
 ok(!$sel->is_element_present("flag-$flag2_id"), "Flag $flag2_id deleted");
 ok(!$sel->is_editable("flag_type-$flagtype1_id"), "Flag type 'selenium' not editable by powerless users");
 ok(!$sel->is_element_present("flag_type-$flagtype2_id"), "Flag type not available in c1");

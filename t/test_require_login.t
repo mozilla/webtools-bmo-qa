@@ -24,7 +24,7 @@ my @pages = qw(admin attachment buglist chart colchange describecomponents
                editversions editwhines editworkflow enter_bug long_list page
                post_bug process_bug query quips report reports request
                sanitycheck search_plugin show_activity show_bug showattachment
-               showdependencygraph showdependencytree sidebar summarize_time
+               showdependencygraph showdependencytree summarize_time
                userprefs votes xml);
 
 foreach my $page (@pages) {

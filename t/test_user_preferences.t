@@ -51,30 +51,30 @@ $sel->type_ok("short_desc", "First bug created");
 $sel->type_ok("comment", "I'm not in the CC list.");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/, "Bug created");
 my $bug1_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
+$sel->is_text_present_ok('has been added to the database', "Bug $bug1_id created");
 $sel->value_is("addselfcc", "off");
 $sel->select_ok("bug_status", "label=IN_PROGRESS");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 $sel->click_ok("editme_action");
 $sel->value_is("short_desc", "First bug created");
 $sel->value_is("addselfcc", "off");
 
-# Tag the bug (add it to a saved search).
+# Tag the bug.
 
 $sel->select_ok("lob_action", "label=Add");
 $sel->type_ok("lob_newqueryname", "sel-tmp");
 $sel->type_ok("bug_ids", $bug1_id);
 $sel->click_ok("commit_list_of_bugs");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Search created");
+$sel->title_is("Tag Updated");
 my $text = trim($sel->get_text("message"));
-ok($text =~ /OK, you have a new search named sel-tmp./, "New saved search 'sel-tmp' created");
+ok($text =~ /The 'sel-tmp' tag has been added to bug $bug1_id/, "Bug added to 'sel-tmp' tag");
 $sel->click_ok("link=sel-tmp");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug List: sel-tmp");
+$sel->is_text_present_ok("Tags: sel-tmp");
 $sel->is_text_present_ok("One bug found");
 
 # File another bug in the 'TestProduct' product.
@@ -85,45 +85,74 @@ $sel->type_ok("short_desc", "My second bug");
 $sel->type_ok("comment", "Still not in the CC list");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/, "Bug created");
 my $bug2_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
+$sel->is_text_present_ok('has been added to the database', "Bug $bug2_id created");
 $sel->value_is("addselfcc", "off");
 
-# Update the saved search.
+# Add another bug to the tag.
 
 $sel->select_ok("lob_action", "label=Add");
 $sel->select_ok("lob_oldqueryname", "label=sel-tmp");
 $sel->type_ok("bug_ids", $bug2_id);
 $sel->click_ok("commit_list_of_bugs");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Search updated");
+$sel->title_is("Tag Updated");
 $text = trim($sel->get_text("message"));
-ok($text =~ /Your search named sel-tmp has been updated./, "Search 'sel-tmp' has been updated");
+ok($text =~ /The 'sel-tmp' tag has been added to bug $bug2_id/, "Bug added to 'sel-tmp' tag");
 $sel->click_ok("link=sel-tmp");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug List: sel-tmp");
+$sel->title_is("Bug List");
+$sel->is_text_present_ok("Tags: sel-tmp");
 $sel->is_text_present_ok("2 bugs found");
 $sel->click_ok("link=$bug1_id");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^$bug1_id /);
 $sel->type_ok("comment", "The next bug I should see is this one.");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
+
 $sel->click_ok("editme_action");
 $sel->value_is("short_desc", "First bug created");
 $sel->is_text_present_ok("The next bug I should see is this one.");
 
-# Remove the saved search.
+# Remove the tag from all bugs.
 
+$sel->open_ok("/$config->{bugzilla_installation}/buglist.cgi?tag=sel-tmp", undef, "List 'sel-tmp' bugs");
+$sel->wait_for_page_to_load(WAIT_TIME);
+$sel->title_is("Bug List");
+$sel->is_text_present_ok("Tags: sel-tmp");
+$sel->click_ok("link=$bug1_id");
+$sel->wait_for_page_to_load(WAIT_TIME);
+$sel->title_like(qr/^$bug1_id /);
+$sel->select_ok("lob_action", "label=Remove");
+$sel->select_ok("lob_oldqueryname", "label=sel-tmp");
+$sel->type_ok("bug_ids", $bug1_id);
+$sel->click_ok("commit_list_of_bugs");
+$sel->wait_for_page_to_load(WAIT_TIME);
+$sel->title_is("Tag Updated");
+$text = trim($sel->get_text("message"));
+ok($text =~ /The 'sel-tmp' tag has been removed from bug $bug1_id/, "Bug removed from 'sel-tmp' tag");
 $sel->click_ok("link=sel-tmp");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug List: sel-tmp");
-$sel->click_ok("link=Forget Search 'sel-tmp'");
+$sel->title_is("Bug List");
+$sel->is_text_present_ok("Tags: sel-tmp");
+$sel->click_ok("link=$bug2_id");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Search is gone");
+$sel->title_like(qr/^$bug2_id /);
+$sel->select_ok("lob_action", "label=Remove");
+$sel->select_ok("lob_oldqueryname", "label=sel-tmp");
+$sel->type_ok("bug_ids", $bug2_id);
+$sel->click_ok("commit_list_of_bugs");
+$sel->wait_for_page_to_load(WAIT_TIME);
+$sel->title_is("Tag Updated");
 $text = trim($sel->get_text("message"));
-ok($text =~ /OK, the sel-tmp search is gone./, "The saved search 'sel-tmp' has been deleted");
+ok($text =~ /The 'sel-tmp' tag has been removed from bug $bug2_id/, "Bug removed from 'sel-tmp' tag");
+$sel->click_ok("link=sel-tmp");
+$sel->wait_for_page_to_load(WAIT_TIME);
+$sel->title_is("Bug List");
+$sel->is_text_present_ok("Tags: sel-tmp");
+$sel->is_text_present_ok("Zarro Boogs found");
 logout($sel);
 
 # Edit own user preferences, now as an unprivileged user.
@@ -172,21 +201,21 @@ $sel->wait_for_page_to_load(WAIT_TIME);
 $sel->title_is("Bug List: my_list");
 $sel->click_ok("link=$bug1_id");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id .* First bug created/);
+$sel->title_like(qr/^$bug1_id .* First bug created/);
 $sel->value_is("addselfcc", "on");
 $sel->type_ok("comment", "I should be CC'ed and then I should see the next bug.");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 $sel->is_text_present_ok("The next bug in your list is bug $bug2_id");
 ok(!$sel->is_text_present("I should see the next bug"), "The updated bug is no longer displayed");
 # The user has no privs, so the short_desc field is not present.
-$sel->is_text_present("short_desc", "My second bug");
+$sel->is_text_present_ok("My second bug");
 $sel->value_is("addselfcc", "on");
 $sel->click_ok("link=bug $bug1_id");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id .* First bug created/);
-$sel->is_text_present("1 user including you");
+$sel->title_like(qr/^$bug1_id .* First bug created/);
+$sel->is_text_present_ok("1 user including you");
 
 # Delete the saved search and log out.
 

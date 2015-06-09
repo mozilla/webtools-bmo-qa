@@ -102,15 +102,13 @@ my $kw1 = $sel->get_text("keywords");
 $sel->type_ok("keywords", "$kw1, key-selenium-kone");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug $test_bug_1 processed");
-$sel->is_text_present_ok("Changes submitted");
+$sel->is_text_present_ok("Changes submitted for bug $test_bug_1");
 go_to_bug($sel, $test_bug_2);
 my $kw2 = $sel->get_text("keywords");
 $sel->type_ok("keywords", "$kw2, key-selenium-kone, key-selenium-ktwo");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug $test_bug_2 processed");
-$sel->is_text_present_ok("Changes submitted");
+$sel->is_text_present_ok("Changes submitted for bug $test_bug_2");
 
 # Now make sure these bugs correctly appear in buglists.
 
@@ -141,15 +139,14 @@ $sel->title_is("Search for bugs");
 $sel->remove_all_selections("product");
 $sel->remove_all_selections("bug_status");
 # Bugzilla doesn't allow substrings for keywords.
-$sel->type_ok("keywords", "selenium");
+$sel->type_ok("keywords", "selen");
 $sel->click_ok("Search");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Invalid Keyword");
-$sel->is_text_present_ok("There is no keyword named 'selenium'");
+$sel->is_text_present_ok("Zarro Boogs found");
 
 # Make sure describekeywords.cgi works as expected.
 
-$sel->click_ok("link=listed here");
+$sel->open_ok("/$config->{bugzilla_installation}/describekeywords.cgi");
 $sel->wait_for_page_to_load(WAIT_TIME);
 $sel->title_is("Bugzilla Keyword Descriptions");
 $sel->is_text_present_ok("key-selenium-kone");

@@ -135,6 +135,9 @@ for my $username (@usernames) {
 
     my $password;
     my $login;
+    my $realname = exists $config->{"$username" . "_user_username"}
+		   ? $config->{"$username" . "_user_username"}
+                   : $username;
 
     if ($username eq 'permanent_user') {
         $password = $config->{admin_user_passwd};
@@ -161,7 +164,7 @@ for my $username (@usernames) {
 
         Bugzilla::User->create(
             {   login_name    => $login,
-                realname      => $username,
+                realname      => $realname,
                 cryptpassword => $password,
                 %extra_args,
             }
@@ -247,14 +250,16 @@ my @statuses = (
         sortkey     => 800,
         isactive    => 1,
         isopen      => 0,
-        transitions => [['UNCONFIRMED', 0], ['REOPENED', 0], ['RESOLVED', 0]],
+        transitions => [['UNCONFIRMED', 0], ['CONFIRMED', 0], ['REOPENED', 0],
+                        ['RESOLVED', 0]],
     },
     {
         value       => 'CLOSED',
         sortkey     => 900,
         isactive    => 1,
         isopen      => 0,
-        transitions => [['UNCONFIRMED', 0], ['REOPENED', 0], ['RESOLVED', 0]],
+        transitions => [['UNCONFIRMED', 0], ['CONFIRMED', 0], ['REOPENED', 0],
+                        ['RESOLVED', 0]],
     },
 );
 

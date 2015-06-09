@@ -8,6 +8,14 @@ use Test::More;
 use Test::WWW::Selenium;
 use WWW::Selenium::Util qw(server_is_running);
 
+# Fixes wide character warnings
+BEGIN {
+    my $builder = Test::More->builder;
+    binmode $builder->output,         ":encoding(utf8)";
+    binmode $builder->failure_output, ":encoding(utf8)";
+    binmode $builder->todo_output,    ":encoding(utf8)";
+}
+
 use base qw(Exporter);
 @QA::Util::EXPORT = qw(
     trim
@@ -171,15 +179,25 @@ sub file_bug_in_product {
         $sel->wait_for_page_to_load(WAIT_TIME);
         $title = $sel->get_title();
     }
-    if ($title eq "Enter Bug") {
+    if ($sel->is_text_present("Which product is affected by the problem")) {
+        ok(1, "Which product is affected by the problem");
+        $sel->click_ok("link=Other Products", undef, "Choose full product list");
+        $sel->wait_for_page_to_load(WAIT_TIME);
+        $title = $sel->get_title();
+    }
+    if ($sel->is_text_present($product)) {
         ok(1, "Display the list of enterable products");
-        $sel->click_ok("link=$product", undef, "Choose $product");
+        $sel->open_ok("/bmo/enter_bug.cgi?product=$product&format=__default__", undef, "Choose product $product");
         $sel->wait_for_page_to_load(WAIT_TIME);
     }
     else {
         ok(1, "Only one product available in $classification. Skipping the 'Choose product' page.")
     }
     $sel->title_is("Enter Bug: $product", "Display form to enter bug data");
+    # Always make sure all fields are visible
+    if ($sel->is_element_present('//input[@value="Show Advanced Fields"]')) {
+        $sel->click_ok('//input[@value="Show Advanced Fields"]');
+    }
 }
 
 sub create_bug {
@@ -195,15 +213,10 @@ sub create_bug {
 
 sub edit_bug {
     my ($sel, $bug_id, $bug_summary, $options) = @_;
-    my $ndash = NDASH;
     my $btn_id = $options ? $options->{id} : 'commit';
-
     $sel->click_ok($btn_id);
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("$bug_id $ndash $bug_summary", "Changes submitted to bug $bug_id");
-    # If the web browser doesn't support history.ReplaceState or has it turned off,
-    # "Bug XXX processed" is displayed instead (as in Bugzilla 4.0 and older).
-    # $sel->title_is("Bug $bug_id processed", "Changes submitted to bug $bug_id");
+    $sel->is_text_present_ok("Changes submitted for bug $bug_id");
 }
 
 sub edit_bug_and_return {

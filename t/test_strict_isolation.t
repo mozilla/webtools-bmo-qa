@@ -28,7 +28,7 @@ $master_gid =~ s/group_//;
 $sel->click_ok('commit');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 my $bug1_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
-$sel->title_like(qr/^Bug $bug1_id Submitted/, "Bug $bug1_id created");
+$sel->is_text_present_ok('has been added to the database', "Bug $bug1_id created");
 
 # At that point, CANEDIT is off and so everybody can be CC'ed to the bug.
 
@@ -36,7 +36,7 @@ $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", "$qa_user, $no_privs_user");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 go_to_bug($sel, $bug1_id);
 $sel->click_ok("cc_edit_area_showhide");
 $sel->add_selection_ok("cc", "label=$no_privs_user");
@@ -44,7 +44,7 @@ $sel->add_selection_ok("cc", "label=$qa_user");
 $sel->check_ok("removecc");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 
 # Now enable CANEDIT for the "Master" group. This will enable strict isolation
 # for the product.
@@ -69,7 +69,7 @@ $sel->title_is("Invalid User Group");
 $sel->is_text_present_ok("User '$no_privs_user' is not able to edit the 'Another Product' Product");
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^$bug1_id /);
 $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", $qa_user);
 $sel->click_ok("commit");
@@ -100,14 +100,14 @@ $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", $qa_user);
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 go_to_bug($sel, $bug1_id);
 $sel->click_ok("cc_edit_area_showhide");
 $sel->add_selection_ok("cc", "label=$qa_user");
 $sel->check_ok("removecc");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $bug1_id processed");
+$sel->is_text_present_ok("Changes submitted for bug $bug1_id");
 
 # The powerless user still cannot be CC'ed.
 

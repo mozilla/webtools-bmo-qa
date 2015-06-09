@@ -23,13 +23,13 @@ $sel->type_ok("work_time", 2.6);
 $sel->type_ok("comment", "I did some work");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug $test_bug_1 processed");
+$sel->is_text_present_ok("Changes submitted for bug $test_bug_1");
 # Make sure the correct bug is redisplayed.
 $sel->click_ok("link=bug $test_bug_1");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $test_bug_1/, "Display bug $test_bug_1");
+$sel->title_like(qr/^$test_bug_1/, "Display bug $test_bug_1");
 $sel->is_text_present_ok("I did some work");
-$sel->is_text_present_ok("Additional hours worked: 2.6");
+$sel->is_text_present_ok("Hours Worked: 2.6");
 
 # Let's call summarize_time.cgi directly, with no parameters.
 
@@ -42,9 +42,9 @@ ok($error_msg =~ /You apparently didn't choose any bugs to view/, "No data displ
 
 open_advanced_search_page($sel);
 $sel->remove_all_selections("bug_status");
-$sel->select_ok("field0-0-0", "label=Hours Worked");
-$sel->select_ok("type0-0-0", "label=is greater than");
-$sel->type_ok("value0-0-0", "0");
+$sel->select_ok("f1", "label=Hours Worked");
+$sel->select_ok("o1", "label=is greater than");
+$sel->type_ok("v1", "0");
 $sel->click_ok("Search");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Bug List");

@@ -26,6 +26,8 @@ $sel->type_ok("description", "A great new product");
 $sel->type_ok("votesperuser", 10);
 $sel->type_ok("maxvotesperbug", 5);
 $sel->type_ok("votestoconfirm", 3);
+$sel->select_ok("default_op_sys_id", "Unspecified");
+$sel->select_ok("default_platform_id", "Unspecified");
 $sel->click_ok('//input[@type="submit" and @value="Add"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Product Created");
@@ -35,6 +37,9 @@ $sel->title_is("Add component to the Eureka product");
 $sel->type_ok("component", "Pegasus");
 $sel->type_ok("description", "A constellation in the north hemisphere.");
 $sel->type_ok("initialowner", $config->{permanent_user}, "Setting the default owner");
+$sel->uncheck_ok("watch_user_auto");
+$sel->type_ok("watch_user", "pegasus\@eureka.bugs");
+$sel->check_ok("watch_user_auto");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Component Created");
@@ -50,7 +55,7 @@ $sel->type_ok("short_desc", "Aries");
 $sel->type_ok("comment", "1st constellation");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/);
+$sel->is_text_present_ok('has been added to the database');
 my $bug1_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
 # Now vote for this bug.
@@ -80,7 +85,7 @@ $sel->type_ok("short_desc", "Taurus");
 $sel->type_ok("comment", "2nd constellation");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/);
+$sel->is_text_present_ok('has been added to the database');
 my $bug2_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
 # Put enough votes on this bug to confirm it by popular votes.
@@ -103,7 +108,7 @@ $sel->type_ok("short_desc", "Gemini");
 $sel->type_ok("comment", "3rd constellation");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/);
+$sel->is_text_present_ok('has been added to the database');
 my $bug3_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
 # Vote for this bug, but remain below the threshold required
@@ -150,7 +155,7 @@ ok($text =~ /You tried to use 12 votes in the Eureka product, which exceeds the 
 
 edit_product($sel, 'Eureka');
 $sel->type_ok("votestoconfirm", 2);
-$sel->click_ok("submit");
+$sel->click_ok('//input[@type="submit" and @value="Save Changes"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Updating Product 'Eureka'");
 $full_text = trim($sel->get_body_text());
@@ -164,7 +169,7 @@ $sel->click_ok("link='Eureka'");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Edit Product 'Eureka'");
 $sel->type_ok("maxvotesperbug", 4);
-$sel->click_ok("submit");
+$sel->click_ok('//input[@type="submit" and @value="Save Changes"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Updating Product 'Eureka'");
 $full_text = trim($sel->get_body_text());
@@ -176,7 +181,7 @@ $sel->is_text_present_ok("removed votes for bug $bug2_id from " . $config->{admi
 
 $sel->click_ok("link=$bug2_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug $bug2_id /);
+$sel->title_like(qr/$bug2_id /);
 $text = trim($sel->get_text("votes_container"));
 ok($text =~ /4 votes/, "4 votes remaining");
 
@@ -185,7 +190,7 @@ ok($text =~ /4 votes/, "4 votes remaining");
 
 edit_product($sel, "Eureka");
 $sel->type_ok("votesperuser", 5);
-$sel->click_ok("submit");
+$sel->click_ok('//input[@type="submit" and @value="Save Changes"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Updating Product 'Eureka'");
 $full_text = trim($sel->get_body_text());
@@ -196,7 +201,7 @@ $sel->is_text_present_ok("removed votes for bug");
 
 $sel->click_ok("link=$bug3_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug $bug3_id /);
+$sel->title_like(qr/$bug3_id /);
 $text = trim($sel->get_text("votes_container"));
 ok($text =~ /2 votes/, "2 votes remaining");
 
@@ -204,7 +209,7 @@ ok($text =~ /2 votes/, "2 votes remaining");
 
 edit_product($sel, "Eureka");
 $sel->click_ok("allows_unconfirmed");
-$sel->click_ok("submit");
+$sel->click_ok('//input[@type="submit" and @value="Save Changes"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Updating Product 'Eureka'");
 $full_text = trim($sel->get_body_text());
@@ -218,7 +223,7 @@ $sel->type_ok("short_desc", "Cancer");
 $sel->type_ok("comment", "4th constellation");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/Bug \d+ Submitted/);
+$sel->is_text_present_ok('has been added to the database');
 my $bug4_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
 
 # Now delete the 'Eureka' product.
