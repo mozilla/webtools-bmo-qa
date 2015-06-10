@@ -34,12 +34,17 @@ log_in($sel, $config, 'QA_Selenium_TEST');
 $sel->click_ok("link=New");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Enter A Bug");
+if ($sel->is_text_present('None of the above; my bug is in')) {
+    $sel->click_ok('advanced_link');
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+    $sel->title_is("Enter Bug");
+}
 $sel->click_ok('link=Other Products');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->is_text_present_ok("QA-Selenium-TEST");
 # For some unknown reason, Selenium doesn't like hyphens in links.
 # $sel->click_ok("link=QA-Selenium-TEST");
-$sel->click_ok('//a[contains(@href, "QA-Selenium-TEST")]');
+$sel->click_ok('//div[@id="choose_product"]//a[contains(@href, "QA-Selenium-TEST")]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->is_text_present_ok("Product: QA-Selenium-TEST");
 logout($sel);
