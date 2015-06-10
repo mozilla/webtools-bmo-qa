@@ -65,6 +65,9 @@ set_parameters($sel, {'Bug Fields' => {'usestatuswhiteboard-off' => undef}});
 $sel->click_ok("link=Search");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Search for bugs");
+if (!$sel->is_text_present('Bugs numbered')) {
+    $sel->click_ok('Detailed Bug Information');
+}
 ok(!$sel->is_text_present_ok("Whiteboard:"), "Whiteboard label no longer displayed");
 $sel->open_ok("/$config->{bugzilla_installation}/show_bug.cgi?id=$test_bug_1");
 $sel->title_like(qr/^$test_bug_1\b/);
